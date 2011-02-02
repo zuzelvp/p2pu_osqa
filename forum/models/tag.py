@@ -11,7 +11,7 @@ class ActiveTagManager(models.Manager):
 
 class Tag(BaseModel):
     name            = models.CharField(max_length=255, unique=True)
-    created_by      = models.ForeignKey(User, related_name='created_tags')
+    created_by      = models.ForeignKey(User, related_name='created_tags', null=True)
     marked_by       = models.ManyToManyField(User, related_name="marked_tags", through="MarkedTag")
     # Denormalised data
     used_count = models.PositiveIntegerField(default=0)

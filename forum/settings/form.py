@@ -56,7 +56,7 @@ label = _("Minimum length of a tag"),
 help_text = _("How short a tag can be."),
 ))
 
-FORM_MAX_LENGTH_OF_TAG = Setting('FORM_MAX_LENGTH_OF_TAG', 20, FORUM_SET, dict(
+FORM_MAX_LENGTH_OF_TAG = Setting('FORM_MAX_LENGTH_OF_TAG', 50, FORUM_SET, dict(
 label = _("Maximum length of a tag"),
 help_text = _("How long a tag can be."),
 ))
