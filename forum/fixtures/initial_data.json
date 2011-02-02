@@ -1,0 +1,29 @@
+[    
+    {
+        "pk": 3, 
+        "model": "forum.tag", 
+        "fields": {
+            "name": "Accessibility Expert badge", 
+            "created_by": 1, 
+            "used_count": 0
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "forum.tag", 
+        "fields": {
+            "name": "JavaScript Basic badge", 
+            "created_by": 1, 
+            "used_count": 0
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "forum.tag", 
+        "fields": {
+            "name": "JavaScript Expert badge", 
+            "created_by": 1, 
+            "used_count": 0
+        }
+    } 
+]

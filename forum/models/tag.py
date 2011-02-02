@@ -5,7 +5,8 @@ import django.dispatch
 
 class ActiveTagManager(models.Manager):
     def get_query_set(self):
-        return super(ActiveTagManager, self).get_query_set().exclude(used_count__lt=1)
+        # badge tags will have used count = 0 at the begining
+        return super(ActiveTagManager, self).get_query_set().exclude(used_count__lt=0)
 
 
 class Tag(BaseModel):
