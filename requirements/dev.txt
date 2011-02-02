@@ -1,0 +1,8 @@
+django
+markdown
+html5lib
+south
+python-openid
+django-debug-toolbar
+MySQL-python
+
