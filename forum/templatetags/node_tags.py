@@ -21,6 +21,15 @@ def vote_buttons(post, user):
 
     return context
 
+@register.inclusion_tag('node/answer_vote_buttons.html')
+def answer_vote_buttons(post, user):
+    context = dict(post=post, user_vote='none', can_comment=user.can_comment(post),)
+
+    if user.is_authenticated():
+        context['user_vote'] = {1: 'up', -1: 'down', None: 'none'}[VoteAction.get_for(user, post)]
+
+    return context
+
 @register.inclusion_tag('node/accept_button.html')
 def accept_button(answer, user):
     if not settings.DISABLE_ACCEPTING_FEATURE:

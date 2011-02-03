@@ -226,11 +226,26 @@ def comment(request, id):
     post = get_object_or_404(Node, id=id)
     user = request.user
 
-    if not user.is_authenticated():
-        raise AnonymousNotAllowedException(_('comment'))
-
     if not request.method == 'POST':
         raise CommandException(_("Invalid request"))
+
+    vote_type = request.POST.get('vote_type', 'comment')
+    is_voting = (vote_type in ('up', 'down'))
+
+    if not user.is_authenticated():
+        msg = is_voting and _('vote') or _('comment')
+        raise AnonymousNotAllowedException(msg)
+
+    if vote_type == 'up' and not user.can_vote_up():
+        raise NotEnoughRepPointsException(_('upvote'))
+
+    if vote_type == 'down' and not user.can_vote_down():
+        raise NotEnoughRepPointsException(_('downvote'))
+
+    user_vote_count_today = user.get_vote_count_today()
+
+    if is_voting and user_vote_count_today >= user.can_vote_count_today():
+        raise NotEnoughLeftException(_('votes'), str(settings.MAX_VOTES_PER_DAY))
 
     comment_text = request.POST.get('comment', '').strip()
 
@@ -243,38 +258,70 @@ def comment(request, id):
     if len(comment_text) > settings.FORM_MAX_COMMENT_BODY:
         raise CommandException(_("No more than %d characters on comment body.") % settings.FORM_MAX_COMMENT_BODY)
 
+    old_vote = VoteAction.get_action_for(node=post, user=user) 
+
+    if is_voting and old_vote:
+        is_too_old = (old_vote.action_date < datetime.datetime.now() - datetime.timedelta(days=int(settings.DENY_UNVOTE_DAYS)))
+        if is_too_old:
+            raise CommandException(
+                    _("Sorry but you cannot cancel a vote after %(ndays)d %(tdays)s from the original vote") %
+                    {'ndays': int(settings.DENY_UNVOTE_DAYS),
+                     'tdays': ungettext('day', 'days', int(settings.DENY_UNVOTE_DAYS))}
+                    )
+
+    
     if 'id' in request.POST:
         comment = get_object_or_404(Comment, id=request.POST['id'])
 
         if not user.can_edit_comment(comment):
             raise NotEnoughRepPointsException( _('edit comments'))
-
-        comment = ReviseAction(user=user, node=comment, ip=request.META['REMOTE_ADDR']).save(
-                data=dict(text=comment_text)).node
     else:
         if not user.can_comment(post):
             raise NotEnoughRepPointsException( _('comment'))
 
+    if is_voting:
+        new_vote_cls = (vote_type == 'up') and VoteUpAction or VoteDownAction
+        score_inc = 0
+
+        if old_vote:
+            old_vote.cancel(ip=request.META['REMOTE_ADDR'])
+            score_inc += (old_vote.__class__ == VoteDownAction) and 1 or -1
+
+        if old_vote.__class__ != new_vote_cls:
+            new_vote_cls(user=user, node=post, ip=request.META['REMOTE_ADDR']).save()
+            score_inc += (new_vote_cls == VoteUpAction) and 1 or -1
+        else:
+            vote_type = "none"
+
+    if 'id' in request.POST:
+        comment = ReviseAction(user=user, node=comment, ip=request.META['REMOTE_ADDR']).save(
+                data=dict(text=comment_text)).node
+    else:   
         comment = CommentAction(user=user, ip=request.META['REMOTE_ADDR']).save(
                 data=dict(text=comment_text, parent=post)).node
 
     if comment.active_revision.revision == 1:
-        return {
-        'commands': {
-        'insert_comment': [
-                id, comment.id, comment.comment, user.decorated_name, user.get_profile_url(),
-                reverse('delete_comment', kwargs={'id': comment.id}),
-                reverse('node_markdown', kwargs={'id': comment.id}),
-                reverse('convert_comment', kwargs={'id': comment.id}),            
-                ]
-        }
+        response = {
+            'commands': { 'insert_comment': [id, comment.id, comment.comment, user.decorated_name,
+                                             user.get_profile_url(), reverse('delete_comment', kwargs={'id': comment.id}),
+                                             reverse('node_markdown', kwargs={'id': comment.id}),
+                                             reverse('convert_comment', kwargs={'id': comment.id})]
+            }
         }
     else:
-        return {
-        'commands': {
-        'update_comment': [comment.id, comment.comment]
-        }
-        }
+        response = {'commands': {'update_comment': [comment.id, comment.comment]}}
+
+    if is_voting:
+        response['commands']['update_post_score'] = [id, score_inc]
+        response['commands']['update_user_post_vote'] = [id, vote_type]
+    
+        votes_left = (int(settings.MAX_VOTES_PER_DAY) - user_vote_count_today) + (vote_type == 'none' and -1 or 1)
+
+        if int(settings.START_WARN_VOTES_LEFT) >= votes_left:
+            response['message'] = _("You have %(nvotes)s %(tvotes)s left today.") % \
+                                     {'nvotes': votes_left, 'tvotes': ungettext('vote', 'votes', votes_left)}
+
+    return response
 
 @decorate.withfn(command)
 def node_markdown(request, id):

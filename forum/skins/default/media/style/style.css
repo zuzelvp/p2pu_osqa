@@ -1367,26 +1367,26 @@ a.sidebar_button:hover {
     text-decoration: none;
 }
 
-a.post-vote, .favorite-mark, a.accept-answer {
+.post-vote, .favorite-mark, a.accept-answer {
     display: block;
     height: 24px;
     position: relative;
     width: 24px;
 }
 
-a.post-vote.up {
+.post-vote.up {
     background: url("../images/vote-arrow-up.png") no-repeat scroll center center transparent;
 }
 
-a.post-vote.up.on, a.post-vote.up:hover {
+.post-vote.up.on, a.post-vote.up:hover {
     background: url("../images/vote-arrow-up-on.png") no-repeat scroll center center transparent;
 }
 
-a.post-vote.down {
+.post-vote.down {
     background: url("../images/vote-arrow-down.png") no-repeat scroll center center transparent;
 }
 
-a.post-vote.down.on, a.post-vote.down:hover {
+.post-vote.down.on, a.post-vote.down:hover {
     background: url("../images/vote-arrow-down-on.png") no-repeat scroll center center transparent;
 }
 
@@ -1534,7 +1534,8 @@ img.subscription-remove {
     padding-top: 12px;
 }
 
-.endorsment-feedback-msg {
+.endorsment-feedback-msg, .comment-vote-cancel-up-msg, .comment-vote-up-msg,
+.comment-vote-cancel-down-msg, .comment-vote-down-msg {
     display: none;
 }
 

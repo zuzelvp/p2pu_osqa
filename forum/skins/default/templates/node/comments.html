@@ -49,7 +49,11 @@
     {% if can_comment %}
     <form id="comment-{{ post.id }}-form" method="post" action="{% url comment id=post.id %}" accept-charset="utf-8">
         <div class="comment-form-widgets-container">
-            <span class="endorsment-feedback-msg">{% trans "Please provide an endorsment or feedback before your vote is submited." %}</span>
+            <span class="comment-vote-cancel-up-msg">{% trans "Canceling vote up:" %}</span>
+            <span class="comment-vote-up-msg">{% trans "Voting up:" %}</span>
+            <span class="comment-vote-cancel-down-msg">{% trans "Canceling vote down:" %}</span>
+            <span class="comment-vote-down-msg">{% trans "Voting down:" %}</span>
+            <span class="endorsment-feedback-msg">{% trans "please provide an endorsment or feedback before your vote is submited." %}</span>
             <textarea name="comment" class="commentBox"></textarea>
             <div class="comment-form-buttons">
                 <span id="comment-{{ post.id }}-chars-left" class="comment-chars-left">

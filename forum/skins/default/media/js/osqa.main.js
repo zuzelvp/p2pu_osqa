@@ -318,23 +318,53 @@ function end_command(success) {
 
 $(function() {
 
+    var vote_type = 'comment';
+    var vote_up_status = 'off';
+    var vote_down_status = 'off';
+
+    function clear_voting_status() {
+        vote_up_status = 'off';
+        vote_down_status = 'off';          
+    }
+
     $('div.answer').each(function() {
         $answer = $(this);
-        $up_vote_link = $answer.find('.up');
-        $down_vote_link = $answer.find('.down');
+        $up_vote_link = $answer.find('a.up');
+        $down_vote_link = $answer.find('a.down');
         $add_comment_link = $answer.find('.add-comment-link');
+        $cancel_comment_button = $answer.find('.comment-cancel');
 
-        $up_vote_link.click(function(){
-            $add_comment_link.attr('vote', 1);
-            $add_comment_link.click();
-                return false;
-        });
+        if ($up_vote_link.length) {
 
-        $down_vote_link.click(function(){
-            $add_comment_link.attr('vote', -1);
-            $add_comment_link.click();
+            $up_vote_link.click(function(){
+                if (vote_type == 'comment' || vote_type == 'down') {
+                    vote_type = 'up';
+                    clear_voting_status();
+                    if ($up_vote_link.hasClass('on')) {
+                        vote_up_status = 'on';
+                    }
+                    $add_comment_link.click();
+                } else {
+                    $cancel_comment_button.click();
+                }
                 return false;
-        });
+            });
+
+            $down_vote_link.click(function(){
+                if (vote_type == 'comment' || vote_type == 'up') {
+                    vote_type = 'down';
+                    clear_voting_status();
+                    if ($down_vote_link.hasClass('on')) {
+                        vote_down_status = 'on';
+                    }
+                    $add_comment_link.click();
+                } else {
+                    $cancel_comment_button.click();
+                }
+                return false;
+            });
+
+        }
     });
 
     $('a.ajax-command').live('click', function(evt) {
@@ -408,9 +438,14 @@ $(function() {
             var $button = $container.find('.comment-submit');
             var $cancel = $container.find('.comment-cancel');
             var $chars_left_message = $container.find('.comments-chars-left-msg');
-            var $endorsment_feedback_message = $container.find('.endorsment-feedback-msg');
             var $chars_togo_message = $container.find('.comments-chars-togo-msg');
             var $chars_counter = $container.find('.comments-char-left-count');
+
+            var $endorsment_feedback_message = $container.find('.endorsment-feedback-msg');
+            var $comment_vote_cancel_up_message = $container.find('.comment-vote-cancel-up-msg');
+            var $comment_vote_up_message = $container.find('.comment-vote-up-msg');
+            var $comment_vote_cancel_down_message = $container.find('.comment-vote-cancel-down-msg');
+            var $comment_vote_down_message = $container.find('.comment-vote-down-msg');
 
             var $add_comment_link = $comment_tools.find('.add-comment-link');
 
@@ -430,6 +465,29 @@ $(function() {
             textarea.style.overflow = 'hidden';
 
 
+            function show_vote_messages() {
+                hide_vote_messages();
+                if (vote_type == 'up' && vote_up_status == 'on') {
+                    $comment_vote_cancel_up_message.show();
+                } else if (vote_type == 'up' && vote_up_status == 'off') {
+                    $comment_vote_up_message.show();
+                } else if (vote_type == 'down' && vote_down_status == 'on') {
+                    $comment_vote_cancel_down_message.show();
+                } else if (vote_type == 'down' && vote_down_status == 'off') {
+                    $comment_vote_down_message.show();
+                }
+                $endorsment_feedback_message.show();
+            }
+
+
+            function hide_vote_messages() {
+                $comment_vote_cancel_up_message.hide();
+                $comment_vote_up_message.hide();
+                $comment_vote_cancel_down_message.hide();
+                $comment_vote_down_message.hide();
+                $endorsment_feedback_message.hide();
+            }
+
             function cleanup_form() {
                 $textarea.val('');
                 $textarea.css('height', 80);
@@ -438,7 +496,10 @@ $(function() {
                 comment_in_form = false;
                 current_length = 0;
 
-                $endorsment_feedback_message.fadeOut();
+                vote_type = 'comment';
+                clear_voting_status();
+                hide_vote_messages();
+
                 $chars_left_message.hide();
                 $chars_togo_message.show();
 
@@ -511,10 +572,10 @@ $(function() {
 
             $add_comment_link.click(function(){
                 
-                if (!$add_comment_link.attr('vote')) {
+                if (vote_type == 'comment') {
                     cleanup_form();
                 } else {
-                    $endorsment_feedback_message.slideDown('slow');
+                    show_vote_messages();
                 }
                 show_comment_form();
                 return false;
@@ -540,7 +601,8 @@ $(function() {
                 if (running) return false;
 
                 var post_data = {
-                    comment: $textarea.val()
+                    comment: $textarea.val(),
+                    vote_type: vote_type
                 }
 
                 if (comment_in_form) {
@@ -553,7 +615,6 @@ $(function() {
                         if (!error) {
                             cleanup_form();
                             hide_comment_form();
-                            $add_comment_link.removeAttr('vote');
                         }
                     });
 
@@ -568,7 +629,6 @@ $(function() {
                         $comment = $('#comment-' + comment_in_form).slideDown('slow');
                     }
                     hide_comment_form();
-                    $add_comment_link.removeAttr('vote');
                     cleanup_form();
                 }
                 return false;
