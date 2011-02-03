@@ -1534,6 +1534,10 @@ img.subscription-remove {
     padding-top: 12px;
 }
 
+.endorsment-feedback-msg {
+    display: none;
+}
+
 .comment-form-widgets-container input {
     vertical-align: top;
 }

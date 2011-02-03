@@ -317,6 +317,26 @@ function end_command(success) {
 }
 
 $(function() {
+
+    $('div.answer').each(function() {
+        $answer = $(this);
+        $up_vote_link = $answer.find('.up');
+        $down_vote_link = $answer.find('.down');
+        $add_comment_link = $answer.find('.add-comment-link');
+
+        $up_vote_link.click(function(){
+            $add_comment_link.attr('vote', 1);
+            $add_comment_link.click();
+                return false;
+        });
+
+        $down_vote_link.click(function(){
+            $add_comment_link.attr('vote', -1);
+            $add_comment_link.click();
+                return false;
+        });
+    });
+
     $('a.ajax-command').live('click', function(evt) {
         if (running) return false;
 
@@ -388,6 +408,7 @@ $(function() {
             var $button = $container.find('.comment-submit');
             var $cancel = $container.find('.comment-cancel');
             var $chars_left_message = $container.find('.comments-chars-left-msg');
+            var $endorsment_feedback_message = $container.find('.endorsment-feedback-msg');
             var $chars_togo_message = $container.find('.comments-chars-togo-msg');
             var $chars_counter = $container.find('.comments-char-left-count');
 
@@ -417,6 +438,7 @@ $(function() {
                 comment_in_form = false;
                 current_length = 0;
 
+                $endorsment_feedback_message.fadeOut();
                 $chars_left_message.hide();
                 $chars_togo_message.show();
 
@@ -488,7 +510,12 @@ $(function() {
             }
 
             $add_comment_link.click(function(){
-                cleanup_form();
+                
+                if (!$add_comment_link.attr('vote')) {
+                    cleanup_form();
+                } else {
+                    $endorsment_feedback_message.slideDown('slow');
+                }
                 show_comment_form();
                 return false;
             });
@@ -526,6 +553,7 @@ $(function() {
                         if (!error) {
                             cleanup_form();
                             hide_comment_form();
+                            $add_comment_link.removeAttr('vote');
                         }
                     });
 
@@ -540,10 +568,12 @@ $(function() {
                         $comment = $('#comment-' + comment_in_form).slideDown('slow');
                     }
                     hide_comment_form();
+                    $add_comment_link.removeAttr('vote');
                     cleanup_form();
                 }
                 return false;
             });
+
         }
 
         $comment_tools.find('.show-all-comments-link').click(function() {
