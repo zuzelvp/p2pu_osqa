@@ -441,7 +441,7 @@ $(function() {
             var $chars_togo_message = $container.find('.comments-chars-togo-msg');
             var $chars_counter = $container.find('.comments-char-left-count');
 
-            var $endorsment_feedback_message = $container.find('.endorsment-feedback-msg');
+            var $endorsement_feedback_message = $container.find('.endorsement-feedback-msg');
             var $comment_vote_cancel_up_message = $container.find('.comment-vote-cancel-up-msg');
             var $comment_vote_up_message = $container.find('.comment-vote-up-msg');
             var $comment_vote_cancel_down_message = $container.find('.comment-vote-cancel-down-msg');
@@ -476,7 +476,7 @@ $(function() {
                 } else if (vote_type == 'down' && vote_down_status == 'off') {
                     $comment_vote_down_message.show();
                 }
-                $endorsment_feedback_message.show();
+                $endorsement_feedback_message.show();
             }
 
 
@@ -485,7 +485,7 @@ $(function() {
                 $comment_vote_up_message.hide();
                 $comment_vote_cancel_down_message.hide();
                 $comment_vote_down_message.hide();
-                $endorsment_feedback_message.hide();
+                $endorsement_feedback_message.hide();
             }
 
             function cleanup_form() {

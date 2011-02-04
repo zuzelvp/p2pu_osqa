@@ -1534,7 +1534,7 @@ img.subscription-remove {
     padding-top: 12px;
 }
 
-.endorsment-feedback-msg, .comment-vote-cancel-up-msg, .comment-vote-up-msg,
+.endorsement-feedback-msg, .comment-vote-cancel-up-msg, .comment-vote-up-msg,
 .comment-vote-cancel-down-msg, .comment-vote-down-msg {
     display: none;
 }
