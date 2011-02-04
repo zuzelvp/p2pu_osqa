@@ -328,11 +328,11 @@ $(function() {
     }
 
     $('div.answer').each(function() {
-        $answer = $(this);
-        $up_vote_link = $answer.find('a.up');
-        $down_vote_link = $answer.find('a.down');
-        $add_comment_link = $answer.find('.add-comment-link');
-        $cancel_comment_button = $answer.find('.comment-cancel');
+        var $answer = $(this);
+        var $up_vote_link = $answer.find('a.up');
+        var $down_vote_link = $answer.find('a.down');
+        var $add_comment_link = $answer.find('.add-comment-link');
+        var $cancel_comment_button = $answer.find('.comment-cancel');
 
         if ($up_vote_link.length) {
 
