@@ -117,6 +117,7 @@
                     <h2>{% trans "Other settings" %}</h2>
                     <ul>
                     {% for set in othersets %}
+                        <li><a href="{% url admin_custom_badges %}">{% trans "Custom Badges" %}</a></li>
                         <li>
                             <a href="{% url admin_set set.name %}">{{ set.title }}</a>
                             {% if set.name|contained_in:unsaved %}<img width="12" height="12" src="{{ settings.ADMIN_MEDIA_PREFIX }}img/admin/icon_alert.gif" alt="{% trans "Unsaved changes" %}" />{% endif %}

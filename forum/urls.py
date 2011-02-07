@@ -198,11 +198,17 @@ urlpatterns += patterns('',
                             name="admin_flagged_posts"),
                         url(r'^%s%s$' % (_('admin/'), _('static_pages/')), app.admin.static_pages,
                             name="admin_static_pages"),
-
                         url(r'^%s%s%s$' % (_('admin/'), _('static_pages/'), _('new/')), app.admin.edit_page,
                             name="admin_new_page"),
                         url(r'^%s%s%s(?P<id>\d+)/$' % (_('admin/'), _('static_pages/'), _('edit/')), app.admin.edit_page
                             , name="admin_edit_page"),
+
+                        url(r'^%s%s$' % (_('admin/'), _('custom_badges/')), app.admin.custom_badges,
+                            name="admin_custom_badges"),
+                        url(r'^%s%s%s$' % (_('admin/'), _('custom_badges/'), _('new/')), app.admin.edit_custom_badge,
+                            name="admin_new_custom_badge"),
+                        url(r'^%s%s%s(?P<id>\d+)/$' % (_('admin/'), _('custom_badges/'), _('edit/')),
+                            app.admin.edit_custom_badge, name="admin_edit_custom_badge"),
 
                         url(r'^%s%s(?P<name>\w+)/$' % (_('admin/'), _('tools/')), app.admin.tools_page,
                             name="admin_tools"),

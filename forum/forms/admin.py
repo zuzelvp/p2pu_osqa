@@ -2,10 +2,11 @@ import socket
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.admin.widgets import FilteredSelectMultiple, AdminDateWidget
+from django.forms import ModelForm
 from qanda import TitleField, EditorField
 from forum import settings
 from forum.models.node import NodeMetaClass
-from forum.models import User
+from forum.models import User, CustomBadge
 
 class IPListField(forms.CharField):
     def clean(self, value):
@@ -104,4 +105,8 @@ class CreateUserForm(SimpleRegistrationForm, SetPasswordForm):
         self.fields['email'].label = _('email address')
 
 
-    
+class CustomBadgeForm(ModelForm):
+    class Meta:
+        model = CustomBadge
+
+

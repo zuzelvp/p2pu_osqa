@@ -10,11 +10,11 @@ from django.utils.translation import ugettext as _
 from django.utils import simplejson
 from django.db import models
 from forum.settings.base import Setting
-from forum.forms import MaintenanceModeForm, PageForm, CreateUserForm
+from forum.forms import MaintenanceModeForm, PageForm, CreateUserForm, CustomBadgeForm
 from forum.settings.forms import SettingsSetForm
 from forum.utils import pagination, html
 
-from forum.models import Question, Answer, User, Node, Action, Page, NodeState, Tag
+from forum.models import Question, Answer, User, Node, Action, Page, NodeState, Tag, CustomBadge
 from forum.models.node import NodeMetaClass
 from forum.actions import NewPageAction, EditPageAction, PublishAction, DeleteAction, UserJoinsAction, CloseAction
 from forum import settings
@@ -548,7 +548,33 @@ def node_management(request):
     'hide_menu': True
     }))
 
+@admin_page
+def custom_badges(request):
+    badges = CustomBadge.objects.all()
 
+    return ('osqaadmin/custom_badges.html', {
+    'badges': badges,
+    })
+
+@admin_page
+def edit_custom_badge(request, id=None):
+    if id:
+        badge = get_object_or_404(CustomBadge, id=id)
+    else:
+        badge = None
+
+    if request.POST:
+        form = CustomBadgeForm(request.POST, instance=badge)
+        if form.is_valid():
+            badge = form.save()
+            return HttpResponseRedirect(reverse('admin_custom_badges'))
+    else:
+        form = CustomBadgeForm(instance=badge)
+
+    return ('osqaadmin/edit_custom_badge.html', {
+    'badge': badge,
+    'form': form,
+    })
 
 
 

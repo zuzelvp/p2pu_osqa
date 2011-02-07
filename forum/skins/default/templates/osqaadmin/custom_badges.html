@@ -1,0 +1,28 @@
+{% extends basetemplate %}
+
+{% load i18n %}
+
+{% block subtitle %}{% trans "Custom Badges" %}{% endblock %}
+{% block pagename %}{% trans "Custom Badges" %}{% endblock %}
+{% block description %}{% trans "Allows you to create custom badges" %}{% endblock %}
+
+{% block admincontent %}
+    <h1>{% trans "Select custom badge to edit" %}</h1>
+    <ul class="object-tools">
+        <li><a class="addlink" href="{% url admin_new_custom_badge %}">{% trans "New Custom Badge" %}</a></li>
+    </ul>
+    <div class="module">
+        <table style="width: 100%">
+            <caption>{% trans "Custom Badges" %}</caption>
+            <tbody>
+                {% for badge in badges %}
+                    <tr>
+                        <th scope="row"><a href="{% url admin_edit_custom_badge id=badge.id %}">{{ badge.name }}</a></th>
+                        <td><a class="changelink" href="{% url admin_edit_custom_badge id=badge.id %}">{% trans "Edit" %}</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
