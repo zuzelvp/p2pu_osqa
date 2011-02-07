@@ -116,8 +116,13 @@ class CustomBadge(models.Model):
     min_required_votes = models.PositiveIntegerField(help_text=_('Minimun number of votes required to be awarded.'),
         default=0)
 
-    response_prerequisites = models.ManyToManyField('CustomBadge', symmetrical=False, related_name=_('next_level_badges'),
+    response_prerequisites = models.ManyToManyField('CustomBadge', symmetrical=False, related_name='next_level_badges',
         help_text=_("Badges required before a user is allowed to submit a response."), null=True, blank=True)
+
+    owners = models.ManyToManyField(User, related_name='badges_managed', null=True, blank=True,
+        help_text=_("Badge owners have the same voting priviledges as any user with the badge."))
+
+    voting_restricted = models.BooleanField(help_text="If checked, only users with the badge (or the badge owners) will be allowed to vote.", default=False)
 
     class Meta:
         app_label = 'forum'
@@ -214,17 +219,30 @@ class CustomBadge(models.Model):
 
     @classmethod
     def is_response_restricted(cls, user, question):
-        if user.is_authenticated():
-            for name in question.tagname_list():
-                try:
-                    badge = CustomBadge.objects.get(tag__name=name)
-                except CustomBadge.DoesNotExist:
+        for name in question.tagname_list():
+            try:
+                badge = CustomBadge.objects.get(tag__name=name)
+            except CustomBadge.DoesNotExist:
+                continue
+            for prerequisite in badge.response_prerequisites.all():
+                if not user.is_authenticated or not user.badges.filter(cls=prerequisite.ondb.cls):
+                    return True
+        return False
+
+    @classmethod
+    def is_voting_restricted(cls, user, answer):
+        for name in answer.parent.tagname_list():
+            try:
+                badge = CustomBadge.objects.get(tag__name=name)
+            except CustomBadge.DoesNotExist:
+                continue
+            if badge.voting_restricted:
+                if not user.is_authenticated():
+                    return True
+                if badge.owners.filter(username=user.username):
                     continue
-                for prerequisite in badge.response_prerequisites.all():
-                    if not user.badges.filter(cls=prerequisite.ondb.cls):
-                        return True
-            return False
-        else:
-            return True
+                if not user.badges.filter(cls=badge.ondb.cls):
+                    return True
+        return False
 
 

@@ -236,6 +236,11 @@ def comment(request, id):
         msg = is_voting and _('vote') or _('comment')
         raise AnonymousNotAllowedException(msg)
 
+    from forum.models import CustomBadge
+    if is_voting and CustomBadge.is_voting_restricted(user, post):
+        msg = _('Only users with the badge (or the badge owners) are allowed to vote.')
+        raise CommandException(msg)
+
     if is_voting and user == post.author:
         raise CannotDoOnOwnException(_('vote'))
 

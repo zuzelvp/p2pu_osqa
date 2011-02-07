@@ -23,7 +23,9 @@ def vote_buttons(post, user):
 
 @register.inclusion_tag('node/answer_vote_buttons.html')
 def answer_vote_buttons(post, user):
-    context = dict(post=post, user_vote='none', can_comment=user.can_comment(post),)
+    from forum.models import CustomBadge
+    context = dict(post=post, user_vote='none', can_comment=user.can_comment(post),
+        is_voting_restricted=CustomBadge.is_voting_restricted(user, post))
 
     if user.is_authenticated():
         context['user_vote'] = {1: 'up', -1: 'down', None: 'none'}[VoteAction.get_for(user, post)]
