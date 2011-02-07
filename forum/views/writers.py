@@ -180,6 +180,10 @@ def edit_answer(request, id):
     elif not request.user.can_edit_post(answer):
         raise Http404
 
+    from forum.models import CustomBadge
+    if CustomBadge.is_response_restricted(request.user, answer.parent):
+        raise Http404
+
     if request.method == "POST":
         revision_form = RevisionForm(answer, data=request.POST)
         revision_form.is_valid()
@@ -217,7 +221,8 @@ def edit_answer(request, id):
 def answer(request, id):
     question = get_object_or_404(Question, id=id)
 
-    if request.POST:
+    from forum.models import CustomBadge
+    if not CustomBadge.is_response_restricted(request.user, question) and request.POST:
         form = AnswerForm(request.POST, request.user)
 
         if request.session.pop('reviewing_pending_data', False) or not form.is_valid():

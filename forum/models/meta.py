@@ -106,18 +106,24 @@ class Award(models.Model):
 
 class CustomBadge(models.Model):
 
-    name_validator = RegexValidator(r'^[a-zA-z][a-zA-Z ]*$',
-        _('Badge names can only include letters and spaces. Please, do not include the word badge at the end of the name.'))
-    name = models.CharField(max_length=100, unique=True, validators=[name_validator])
-    description = models.TextField()
+    name_help = _('Badge names can only include letters and spaces. Please, do not include the word badge at the end of the name.')
+    name_validator = RegexValidator(r'^[a-zA-z][a-zA-Z ]*$', name_help)
+    name = models.CharField(max_length=100, unique=True, validators=[name_validator], help_text=name_help)
+    description = models.TextField(help_text=_('Short description of the badge.'))
     tag = models.ForeignKey('Tag', editable=False)
     ondb = models.ForeignKey('Badge', editable=False)
 
     min_required_votes = models.PositiveIntegerField(help_text=_('Minimun number of votes required to be awarded.'),
         default=0)
 
+    response_prerequisites = models.ManyToManyField('CustomBadge', symmetrical=False, related_name=_('next_level_badges'),
+        help_text=_("Badges required before a user is allowed to submit a response."), null=True, blank=True)
+
     class Meta:
         app_label = 'forum'
+
+    def __unicode__(self):
+        return self.ondb.name
 
     @property
     def tag_name(self):
@@ -143,7 +149,7 @@ class CustomBadge(models.Model):
         except Tag.DoesNotExist:
             self.tag = Tag.objects.create(name=self.tag_name)
         self.tag_id = self.tag.id
-        self.ondb = Badge.objects.create(name=self.class_name, type=Badge.BRONZE)
+        self.ondb = Badge.objects.create(cls=self.class_name, type=Badge.BRONZE)
         self.ondb_id = self.ondb.id
         self._register_custom_badge()
 
@@ -206,5 +212,19 @@ class CustomBadge(models.Model):
                 from forum.badges.base import award_badge
                 award_badge(badge.ondb, user, action, False)
 
+    @classmethod
+    def is_response_restricted(cls, user, question):
+        if user.is_authenticated():
+            for name in question.tagname_list():
+                try:
+                    badge = CustomBadge.objects.get(tag__name=name)
+                except CustomBadge.DoesNotExist:
+                    continue
+                for prerequisite in badge.response_prerequisites.all():
+                    if not user.badges.filter(cls=prerequisite.ondb.cls):
+                        return True
+            return False
+        else:
+            return True
 
 

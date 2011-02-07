@@ -182,7 +182,7 @@
             <div style="clear:both">
             </div>
             
-            {% if not question.closed %}
+            {% if not question.closed and not response_restricted %}
                 <div style="padding:10px 0 0 0;">
                     {% spaceless %}
                     <div class="headNormal">

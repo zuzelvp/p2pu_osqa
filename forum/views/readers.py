@@ -329,6 +329,8 @@ def question(request, id, slug='', answer=None):
             subscription = False
     else:
         subscription = False
+    from forum.models import CustomBadge
+    response_restricted = CustomBadge.is_response_restricted(request.user, question)
 
     return pagination.paginated(request, ('answers', AnswerPaginatorContext()), {
     "question" : question,
@@ -336,6 +338,7 @@ def question(request, id, slug='', answer=None):
     "answers" : answers,
     "similar_questions" : question.get_related_questions(),
     "subscription": subscription,
+    'response_restricted': response_restricted,
     })
 
 
