@@ -13,7 +13,7 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.db.models import Count
 from forum.forms import get_next_url
-from forum.models import Badge, Award, User, Page
+from forum.models import Badge, Award, User, Page, CustomBadge
 from forum.badges.base import BadgesMeta
 from forum import settings
 from forum.utils.mail import send_template_email
@@ -87,6 +87,7 @@ def logout(request):
 
 @decorators.render('badges.html', 'badges', _('badges'), weight=300)
 def badges(request):
+    CustomBadge.load_custom_badges()
     badges = [b.ondb for b in sorted(BadgesMeta.by_id.values(), lambda b1, b2: cmp(b1.name, b2.name))]
 
     if request.user.is_authenticated():

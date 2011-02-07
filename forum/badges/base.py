@@ -58,20 +58,28 @@ class AbstractBadge(object):
 
     @classmethod
     def award(cls, user, action, once=False):
-        try:
-            if once:
-                node = None
-                awarded = AwardAction.get_for(user, cls.ondb)
-            else:
-                node = action.node
-                awarded = AwardAction.get_for(user, cls.ondb, node)
+        award_badge(cls.ondb, user, action, once)
 
-            trigger = isinstance(action, Action) and action or None
 
-            if not awarded:
-                AwardAction(user=user, node=node).save(data=dict(badge=cls.ondb, trigger=trigger))
-        except MultipleObjectsReturned:
-            if node:
-                logging.error('Found multiple %s badges awarded for user %s (%s)' % (self.name, user.username, user.id))
-            else:
-                logging.error('Found multiple %s badges awarded for user %s (%s) and node %s' % (self.name, user.username, user.id, node.id))
+def award_badge(badge, user, action, once):
+    try:
+        if once:
+            node = None
+            awarded = AwardAction.get_for(user, badge)
+        else:
+            node = action.node
+            awarded = AwardAction.get_for(user, badge, node)
+
+        trigger = isinstance(action, Action) and action or None
+
+        if not awarded:
+            AwardAction(user=user, node=node).save(data=dict(badge=badge, trigger=trigger))
+    except MultipleObjectsReturned:
+        if node:
+            logging.error('Found multiple %s badges awarded for user %s (%s)' % (badge.name, user.username, user.id))
+        else:
+            logging.error('Found multiple %s badges awarded for user %s (%s) and node %s' % (badge.name, user.username, user.id, node.id))
+
+
+
+

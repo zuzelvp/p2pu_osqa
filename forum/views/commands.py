@@ -236,6 +236,9 @@ def comment(request, id):
         msg = is_voting and _('vote') or _('comment')
         raise AnonymousNotAllowedException(msg)
 
+    if user == post.author:
+        raise CannotDoOnOwnException(_('vote'))
+
     if vote_type == 'up' and not user.can_vote_up():
         raise NotEnoughRepPointsException(_('upvote'))
 

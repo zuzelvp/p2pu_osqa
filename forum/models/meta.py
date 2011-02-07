@@ -1,5 +1,8 @@
 from django.utils.translation import ugettext as _
+from django.core.validators import RegexValidator
+
 from base import *
+
 
 class Vote(models.Model):
     user = models.ForeignKey(User, related_name="votes")
@@ -59,11 +62,13 @@ class Badge(models.Model):
 
     @property
     def name(self):
+        CustomBadge.load_custom_badges()
         cls = self.__dict__.get('_class', None)
         return cls and cls.name or _("Unknown")
 
     @property
     def description(self):
+        CustomBadge.load_custom_badges()
         cls = self.__dict__.get('_class', None)
         return cls and cls.description or _("No description available")
 
@@ -97,3 +102,109 @@ class Award(models.Model):
     class Meta:
         unique_together = ('user', 'badge', 'node')
         app_label = 'forum'
+
+
+class CustomBadge(models.Model):
+
+    name_validator = RegexValidator(r'^[a-zA-z][a-zA-Z ]*$',
+        _('Badge names can only include letters and spaces. Please, do not include the word badge at the end of the name.'))
+    name = models.CharField(max_length=100, unique=True, validators=[name_validator])
+    description = models.TextField()
+    tag = models.ForeignKey('Tag', editable=False)
+    ondb = models.ForeignKey('Badge', editable=False)
+
+    min_required_votes = models.PositiveIntegerField(help_text=_('Minimun number of votes required to be awarded.'),
+        default=0)
+
+    class Meta:
+        app_label = 'forum'
+
+    @property
+    def tag_name(self):
+        words = self.name.strip().lower().split() + ['badge']
+        return "-".join(words)
+
+    @property
+    def class_name(self):
+        words = self.name.strip().split() + ['CustomBadge']
+        return "".join(words)
+
+    def save(self, *args, **kwargs):
+        if self.id:
+            self._edit_custom_badge()
+        else:
+            self._create_custom_badge()
+        super(CustomBadge, self).save(*args, **kwargs)
+
+    def _create_custom_badge(self):
+        from forum.models import Tag, Badge
+        try:
+            self.tag = Tag.objects.get(name=self.tag_name)
+        except Tag.DoesNotExist:
+            self.tag = Tag.objects.create(name=self.tag_name)
+        self.tag_id = self.tag.id
+        self.ondb = Badge.objects.create(name=self.class_name, type=Badge.BRONZE)
+        self.ondb_id = self.ondb.id
+        self._register_custom_badge()
+
+    def _edit_custom_badge(self):
+        self.tag.name = self.tag_name
+        self.tag.save()
+        self.ondb.cls = self.class_name
+        self.ondb.save()
+        old = CustomBadge.objects.get(pk=self.pk)
+        for node in old.tag.nodes.all():
+            new_tags = node.tagnames.replace(old.tag_name, self.tag_name)
+            node.tagnames = new_tags
+            node.save()
+            node.active_revision.tagnames = new_tags
+            node.active_revision.save()
+        for user in old.ondb.awarded_to.all():
+            for msg in user.message_set.all():
+                msg.message = msg.message.replace(old.name, self.name)
+                msg.save()
+        from forum.badges.base import BadgesMeta
+        if old.class_name in BadgesMeta.by_class:
+            del BadgesMeta.by_class[old.class_name]
+        self._register_custom_badge()
+
+    def _register_custom_badge(self):
+        from forum.badges.base import BadgesMeta
+        BadgesMeta.by_id[self.ondb.id] = self
+        self.ondb.__dict__['_class'] = self
+        BadgesMeta.by_class[self.class_name] = self
+        from forum.actions import VoteUpAction, VoteDownAction
+        self._hook(VoteUpAction)
+        self._hook(VoteDownAction)
+
+    def _hook(self, action_cls):
+        from forum.models import Action
+        if not Action.hooks.get(action_cls, None):
+            Action.hooks[action_cls] = []
+        hooks = Action.hooks[action_cls]
+        if not CustomBadge.procces_voting_action in hooks: 
+            hooks.append(CustomBadge.procces_voting_action)
+
+    @classmethod
+    def load_custom_badges(cls):
+        for badge in CustomBadge.objects.all():
+            badge._register_custom_badge()
+
+    @classmethod
+    def procces_voting_action(cls, action, new):
+        if action.node.node_type == 'answer':
+            answer = action.node
+            question = answer.parent
+            user = action.node.author
+            for name in question.tagname_list():
+                try:
+                    badge = CustomBadge.objects.get(tag__name=name)
+                except CustomBadge.DoesNotExist:
+                    continue
+                if badge.min_required_votes < 1 or answer.score < badge.min_required_votes:
+                    continue
+                from forum.badges.base import award_badge
+                award_badge(badge.ondb, user, action, False)
+
+
+

@@ -174,6 +174,8 @@ class Action(BaseModel):
         Action.hooks[cls].append(fn)
 
     def trigger_hooks(self, threaded, new=True):
+        from forum.models import CustomBadge
+        CustomBadge.load_custom_badges()
         if threaded:
             thread = Thread(target=trigger_hooks, args=[self, Action.hooks, new])
             thread.setDaemon(True)

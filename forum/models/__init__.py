@@ -6,7 +6,7 @@ from user import User, ValidationHash, AuthKeyUserAssociation, SubscriptionSetti
 from node import Node, NodeRevision, NodeState, NodeMetaClass
 from comment import Comment
 from action import Action, ActionRepute
-from meta import Vote, Flag, Badge, Award
+from meta import Vote, Flag, Badge, Award, CustomBadge
 from utils import KeyValue
 from page import Page
 
@@ -22,7 +22,7 @@ __all__ = [
         'Node', 'NodeRevision', 'NodeState',  
         'Question', 'QuestionSubscription', 'QuestionRevision',
         'Answer', 'AnswerRevision',
-        'Tag', 'Comment', 'MarkedTag', 'Badge', 'Award',
+        'Tag', 'Comment', 'MarkedTag', 'Badge', 'Award', 'CustomBadge',
         'ValidationHash', 'AuthKeyUserAssociation', 'SubscriptionSettings', 'KeyValue', 'User',
         'Action', 'ActionRepute', 'Vote', 'Flag', 'Page'
         ]
