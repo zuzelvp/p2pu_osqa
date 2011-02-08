@@ -112,4 +112,7 @@ if not DEBUG:
     except:
         pass
 
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend',]
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'forum.authentication.drupal_auth_backend.DrupalAuthBackend',
+]
