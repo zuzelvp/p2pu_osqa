@@ -54,14 +54,14 @@ class DrupalAuthBackend:
         user.email = drupal_user.mail
         drupal_realname = drupal.Realname.objects.using(DRUPAL_DB).get(uid=drupal_user.uid)
         user.real_name = drupal_realname.realname
-        try:
-            user_group = drupal.UsersRoles.objects.using(DRUPAL_DB).get(uid=drupal_user.uid)
-            group = drupal.Role.objects.using(DRUPAL_DB).get(rid=user_group.rid)
-            if group.name == 'webmaster':
-                user.is_superuser = True
-                user.is_staff = True
-        except drupal.UsersRoles.DoesNotExist, drupal.Role.DoesNotExist:
-            pass
+        for user_group in drupal.UsersRoles.objects.using(DRUPAL_DB).filter(uid=drupal_user.uid):
+            try:
+                group = drupal.Role.objects.using(DRUPAL_DB).get(rid=user_group.rid)
+                if group.name == 'webmaster':
+                    user.is_superuser = True
+                    user.is_staff = True
+            except drupal.Role.DoesNotExist:
+                pass
         # TODO: get openid data
 
     def get_user(self, user_id):
