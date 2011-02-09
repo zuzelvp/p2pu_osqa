@@ -876,7 +876,7 @@ var _DoCodeBlocks = function(text) {
 			codeblock = codeblock.replace(/^\n+/g,""); // trim leading newlines
 			codeblock = codeblock.replace(/\n+$/g,""); // trim trailing whitespace
 
-			codeblock = "<pre><code>" + codeblock + "\n</code></pre>";
+			codeblock = "<pre class=\"prettyprint\"><code>" + codeblock + "\n</code></pre>";
 
 			return hashBlock(codeblock) + nextChar;
 		}
@@ -1023,7 +1023,7 @@ var _DoBlockQuotes = function(text) {
 			bq = bq.replace(/(^|\n)/g,"$1  ");
 			// These leading spaces screw with <pre> content, so we need to fix that:
 			bq = bq.replace(
-					/(\s*<pre>[^\r]+?<\/pre>)/gm,
+					/(\s*<pre[^\>]+>[^\r]+?<\/pre>)/gm,
 				function(wholeMatch,m1) {
 					var pre = m1;
 					// attacklab: hack around Konqueror 3.5.4 bug:

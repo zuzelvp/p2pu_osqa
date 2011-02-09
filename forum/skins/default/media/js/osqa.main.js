@@ -316,6 +316,21 @@ function end_command(success) {
     }
 }
 
+function styleCode()
+{
+    var refresh = false;
+    $("pre code").parent().each(function() {
+        if (!$(this).hasClass("prettyprint")) {
+            $(this).addClass("prettyprint");
+            refresh = true;
+        }
+    });
+    if (refresh) {
+        prettyPrint();
+    }
+}
+
+
 $(function() {
 
     var vote_type = 'comment';
@@ -326,6 +341,8 @@ $(function() {
         vote_up_status = 'off';
         vote_down_status = 'off';          
     }
+
+    styleCode();
 
     $('div.answer').each(function() {
         var $answer = $(this);

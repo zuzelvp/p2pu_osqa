@@ -75,7 +75,7 @@ Attacklab.wmdBase = function(){
     var toolbar_emphasis_label = $.i18n._('italic') + " <em> Ctrl-I";
     var toolbar_hyperlink_label = $.i18n._('link') + " <a> Ctrl-L";
     var toolbar_blockquote_label = $.i18n._('quote') + " <blockquote> Ctrl-.";
-    var toolbar_code_label = $.i18n._('preformatted text') + " <pre><code> Ctrl-K";
+    var toolbar_code_label = $.i18n._('preformatted text') + " <pre class=\"prettyprint\"><code> Ctrl-K";
     var toolbar_image_label = $.i18n._('image') + " <img> Ctrl-G";
     var toolbar_numbered_label = $.i18n._('numbered list') + " <ol> Ctrl-O";
     var toolbar_bulleted_label = $.i18n._('bulleted list') + " <ul> Ctrl-U";
@@ -2004,11 +2004,11 @@ Attacklab.wmdBase = function(){
 					wmd.panels.output.readOnly = true;
 				}
 				// Otherwise we are just replacing the text in a div.
-				// Send the HTML wrapped in <pre><code>
+				// Send the HTML wrapped in <pre class="prettyprint"><code>
 				else {
 					var newText = text.replace(/&/g, "&amp;");
 					newText = newText.replace(/</g, "&lt;");
-					wmd.panels.output.innerHTML = "<pre><code>" + newText + "</code></pre>";
+					wmd.panels.output.innerHTML = "<pre class=\"prettyprint\"><code>" + newText + "</code></pre>";
 				}
 			}
 			
@@ -2033,6 +2033,7 @@ Attacklab.wmdBase = function(){
 			else {
 				top.scrollBy(0, fullTop - emptyTop);
 			}
+			prettyPrint();
 		};
 		
 		var init = function(){
