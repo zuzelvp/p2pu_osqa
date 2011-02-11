@@ -85,6 +85,21 @@
                 </div>
              </div>
         </script>
+        <script type="text/html" class="new-no-delete-comment-skeleton" id="new-no-delete-comment-skeleton-{{ post.id }}">
+            <div class="comment{% if not comment.top_scorer %} not_top_scorer{% endif %}" id="comment-%ID%">
+                <div id="post-%ID%-score" class="comment-score"></div>
+                <div class="comment-text">%COMMENT%</div>
+                <div class="comment-info" id="comment-%ID%-info">
+                    <a id="comment-%ID%-edit" href="%EDIT_URL%"
+                        class="comment-edit" rel="nofollow"> </a>
+                    <span class="comment-age">({% trans "just now" %})</span>
+                    <a class="comment-user" href="%PROFILE_URL%">%USERNAME%</a>
+                    {% if user.is_authenticated %}
+                        {% if show_gravatar %}{% gravatar user 18 %}{% endif %}
+                    {% endif %}
+                </div>
+             </div>
+        </script>
     </form>
     {% endif %}
 </div>

@@ -277,7 +277,6 @@ def comment(request, id):
                      'tdays': ungettext('day', 'days', int(settings.DENY_UNVOTE_DAYS))}
                     )
 
-    
     if 'id' in request.POST:
         comment = get_object_or_404(Comment, id=request.POST['id'])
 
@@ -307,13 +306,26 @@ def comment(request, id):
     else:   
         comment = CommentAction(user=user, ip=request.META['REMOTE_ADDR']).save(
                 data=dict(text=comment_text, parent=post)).node
+        if not is_voting:
+            comment_type = VoteComment.COMMENT
+        elif old_vote.__class__ != new_vote_cls and new_vote_cls == VoteUpAction:
+            comment_type = VoteComment.VOTE_UP
+        elif old_vote.__class__ != new_vote_cls and new_vote_cls != VoteUpAction:
+            comment_type = VoteComment.VOTE_DOWN
+        elif old_vote.__class__ == VoteUpAction:
+            comment_type = VoteComment.CANCEL_VOTE_UP
+        else:
+            comment_type = VoteComment.CANCEL_VOTE_DOWN
+        vote_comment = VoteComment(comment_type=comment_type, comment=comment)
+        vote_comment.save()
 
     if comment.active_revision.revision == 1:
         response = {
             'commands': { 'insert_comment': [id, comment.id, comment.comment, user.decorated_name,
                                              user.get_profile_url(), reverse('delete_comment', kwargs={'id': comment.id}),
                                              reverse('node_markdown', kwargs={'id': comment.id}),
-                                             reverse('convert_comment', kwargs={'id': comment.id})]
+                                             reverse('convert_comment', kwargs={'id': comment.id}),
+                                             user.can_delete_comment(comment)]
             }
         }
     else:

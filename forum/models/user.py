@@ -293,11 +293,19 @@ class User(BaseModel, DjangoUser):
 
     @true_if_is_super_or_staff
     def can_delete_comment(self, comment):
-        return self == comment.author or self.reputation >= int(settings.REP_TO_DELETE_COMMENTS)
+        from forum.models import VoteComment
+        if comment.vote_comment.get().comment_type == VoteComment.COMMENT:
+            return (self == comment.author or self.reputation >= int(settings.REP_TO_DELETE_COMMENTS))
+        else:
+            return False
 
     @true_if_is_super_or_staff
     def can_convert_comment_to_answer(self, comment):
-        return self == comment.author or self.reputation >= int(settings.REP_TO_CONVERT_COMMENTS_TO_ANSWERS)
+        from forum.models import VoteComment
+        if comment.vote_comment.get().comment_type == VoteComment.COMMENT:
+            return self == comment.author or self.reputation >= int(settings.REP_TO_CONVERT_COMMENTS_TO_ANSWERS)
+        else:
+            return False
 
     def can_convert_to_comment(self, answer):
         return (not answer.marked) and (self.is_superuser or self.is_staff or answer.author == self or self.reputation >= int

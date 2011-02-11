@@ -71,9 +71,14 @@ var response_commands = {
         });
     },
 
-    insert_comment: function(post_id, comment_id, comment, username, profile_url, delete_url, edit_url, convert_url) {
+    insert_comment: function(post_id, comment_id, comment, username, profile_url, delete_url, edit_url, convert_url, can_delete) {
         var $container = $('#comments-container-' + post_id);
-        var skeleton = $('#new-comment-skeleton-' + post_id).html().toString();
+        var skeleton = null;
+        if (can_delete) {
+            skeleton = $('#new-comment-skeleton-' + post_id).html().toString();
+        } else {
+            skeleton = $('#new-no-delete-comment-skeleton-' + post_id).html().toString();
+        }
 
         skeleton = skeleton.replace(new RegExp('%ID%', 'g'), comment_id)
                 .replace(new RegExp('%COMMENT%', 'g'), comment)

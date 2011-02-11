@@ -1,5 +1,6 @@
 from base import *
 from django.utils.translation import ugettext as _
+from django.utils.safestring import mark_safe
 import re
 
 class Comment(Node):
@@ -16,6 +17,7 @@ class Comment(Node):
 
     @property
     def comment(self):
+        self.body = self.body[:3] + self.prefix() + self.body[3:]
         if settings.FORM_ALLOW_MARKDOWN_IN_COMMENTS:
             return self.as_markdown('limitedsyntax')
         else:
@@ -55,4 +57,30 @@ class Comment(Node):
 
     def __unicode__(self):
         return self.body
+
+    def prefix(self):
+        vote_comment = self.vote_comment.get()
+        if vote_comment.comment_type == VoteComment.COMMENT:
+            return ''
+        else:
+            return vote_comment.get_comment_type_display() + ': '
+
+
+class VoteComment(models.Model):
+
+    COMMENT, VOTE_UP, CANCEL_VOTE_UP, VOTE_DOWN, CANCEL_VOTE_DOWN = range(1, 6)
+
+    comment_type_choices = ((COMMENT, _('Comment')),
+        (VOTE_UP, _('Vote Up')),
+        (CANCEL_VOTE_UP, _('Cancel Vote Up')),
+        (VOTE_DOWN, _('Vote Down')),
+        (CANCEL_VOTE_DOWN, _('Cancel Vote Down')))
+
+    comment_type = models.PositiveSmallIntegerField(choices=comment_type_choices, default=COMMENT)
+
+    comment = models.ForeignKey('Comment', related_name='vote_comment')
+
+    class Meta:
+        app_label = 'forum'
+
 
