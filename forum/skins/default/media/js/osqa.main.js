@@ -333,56 +333,7 @@ function styleCode()
 
 $(function() {
 
-    var vote_type = 'comment';
-    var vote_up_status = 'off';
-    var vote_down_status = 'off';
-
-    function clear_voting_status() {
-        vote_up_status = 'off';
-        vote_down_status = 'off';          
-    }
-
     styleCode();
-
-    $('div.answer').each(function() {
-        var $answer = $(this);
-        var $up_vote_link = $answer.find('a.up');
-        var $down_vote_link = $answer.find('a.down');
-        var $add_comment_link = $answer.find('.add-comment-link');
-        var $cancel_comment_button = $answer.find('.comment-cancel');
-
-        if ($up_vote_link.length) {
-
-            $up_vote_link.click(function(){
-                if (vote_type == 'comment' || vote_type == 'down') {
-                    vote_type = 'up';
-                    clear_voting_status();
-                    if ($up_vote_link.hasClass('on')) {
-                        vote_up_status = 'on';
-                    }
-                    $add_comment_link.click();
-                } else {
-                    $cancel_comment_button.click();
-                }
-                return false;
-            });
-
-            $down_vote_link.click(function(){
-                if (vote_type == 'comment' || vote_type == 'up') {
-                    vote_type = 'down';
-                    clear_voting_status();
-                    if ($down_vote_link.hasClass('on')) {
-                        vote_down_status = 'on';
-                    }
-                    $add_comment_link.click();
-                } else {
-                    $cancel_comment_button.click();
-                }
-                return false;
-            });
-
-        }
-    });
 
     $('a.ajax-command').live('click', function(evt) {
         if (running) return false;
@@ -442,12 +393,60 @@ $(function() {
         });
     });
 
-    $('div.comment-form-container').each(function() {
-        var $container = $(this);
+    $('div.vote-comment-container').each(function() {
+        var $vote_comment_container = $(this);
+        var vote_type = 'comment';
+        var vote_up_status = 'off';
+        var vote_down_status = 'off';
+        var $answer = $vote_comment_container.find('div.answer');
+        var $container = $vote_comment_container.find('div.comment-form-container');
         var $comment_tools = $container.parent().find('.comment-tools');
         var $comments_container = $container.parent().find('.comments-container');
-        
         var $form = $container.find('form');
+
+        function clear_voting_status() {
+            vote_up_status = 'off';
+            vote_down_status = 'off';
+        }
+
+        if ($answer.length) {
+            var $up_vote_link = $answer.find('a.up');
+            var $down_vote_link = $answer.find('a.down');
+            var $add_comment_link = $answer.find('.add-comment-link');
+            var $cancel_comment_button = $answer.find('.comment-cancel');
+
+            if ($up_vote_link.length) {
+
+                $up_vote_link.click(function(){
+                    if (vote_type == 'comment' || vote_type == 'down') {
+                        vote_type = 'up';
+                        clear_voting_status();
+                        if ($up_vote_link.hasClass('on')) {
+                            vote_up_status = 'on';
+                        }
+                        $add_comment_link.click();
+                    } else {
+                        $cancel_comment_button.click();
+                    }
+                    return false;
+                });
+
+                $down_vote_link.click(function(){
+                    if (vote_type == 'comment' || vote_type == 'up') {
+                        vote_type = 'down';
+                        clear_voting_status();
+                        if ($down_vote_link.hasClass('on')) {
+                            vote_down_status = 'on';
+                        }
+                        $add_comment_link.click();
+                    } else {
+                        $cancel_comment_button.click();
+                    }
+                    return false;
+                });
+
+            }
+        }
 
         if ($form.length) {
             var $textarea = $container.find('textarea');

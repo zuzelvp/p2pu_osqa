@@ -92,6 +92,7 @@
 </div>
 <div id="main-body" class="">
     <div id="askform">
+        <div class="vote-comment-container">
             <table style="width:100%;" id="question-table" {% post_classes question %}>
                 <tr>
                     <td style="width:30px;vertical-align:top">
@@ -124,6 +125,7 @@
                     </td>
                 </tr>
             </table>
+        </div>
             {% if question.nis.closed %}
             <div class="question-status" style="margin-bottom:15px">
             <h3>
@@ -143,10 +145,11 @@
                     {{ answers.paginator.sort_tabs }}
                 </div>
                 {{ answers.paginator.page_numbers }}
-  
+
                 {% for answer in answers.paginator.page %}
                     <a name="{{ answer.id }}"></a>
-                    <div id="answer-container-{{ answer.id }}" class="answer {% post_classes answer %}">
+                    <div class="vote-comment-container">
+                      <div id="answer-container-{{ answer.id }}" class="answer {% post_classes answer %}">
                         <table style="width:100%;">
                             <tr>
                                 <td style="width:30px;vertical-align:top">
@@ -172,6 +175,7 @@
                                 </td>
                             </tr>
                         </table>
+                      </div>
                     </div>
                 {% endfor %}
                 <div class="paginator-container-left">
