@@ -76,18 +76,16 @@ var response_commands = {
         var skeleton = null;
         if (can_delete) {
             skeleton = $('#new-comment-skeleton-' + post_id).html().toString();
+            skeleton = skeleton.replace(new RegExp('%DELETE_URL%', 'g'), delete_url)
+                .replace(new RegExp('%CONVERT_URL%', 'g'), convert_url);
         } else {
             skeleton = $('#new-no-delete-comment-skeleton-' + post_id).html().toString();
         }
-
         skeleton = skeleton.replace(new RegExp('%ID%', 'g'), comment_id)
-                .replace(new RegExp('%COMMENT%', 'g'), comment)
-                .replace(new RegExp('%USERNAME%', 'g'), username)
-                .replace(new RegExp('%PROFILE_URL%', 'g'), profile_url)
-                .replace(new RegExp('%DELETE_URL%', 'g'), delete_url)
-                .replace(new RegExp('%EDIT_URL%', 'g'), edit_url)
-                .replace(new RegExp('%CONVERT_URL%', 'g'), convert_url);
-
+            .replace(new RegExp('%COMMENT%', 'g'), comment)
+            .replace(new RegExp('%USERNAME%', 'g'), username)
+            .replace(new RegExp('%PROFILE_URL%', 'g'), profile_url)
+            .replace(new RegExp('%EDIT_URL%', 'g'), edit_url);
         $container.append(skeleton);
 
         $('#comment-' + comment_id).slideDown('slow');
