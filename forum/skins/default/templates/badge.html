@@ -4,6 +4,7 @@
 {% load extra_tags %}
 {% load user_tags %}
 {% load humanize %}
+{% load question_list_tags %}
 {% block title %}{% spaceless %}{{ badge.name }} - {% trans "Badge" %}{% endspaceless %}{% endblock %}
 {% block forejs %}
        <script type="text/javascript">
@@ -21,12 +22,17 @@
     <p>
         <a href="{{badge.get_absolute_url}}" title="{{ badge.get_type_display }} : {{ badge.description }}" class="medal"><span class="badge{{ badge.type }}">&#9679;</span>&nbsp;{{ badge.name }}</a> {{ badge.description }}
     </p>
-    <div>
-        {% if badge.awarded_count %}
-        <p style="float:left"><span class="count">{{ award_count|intcomma }}</span>
-        <strong>{% trans "The users have been awarded with badges:" %}</strong></p>
-        {% endif %}
-    </div>
+    <a name="users"></a>
+    {% spaceless %}
+        <h2>
+            {% blocktrans count award_count as counter %}
+            <span class="count">{{counter}}</span> Award
+            {% plural %}
+            <span class="count">{{counter}}</span> Awards
+            {% endblocktrans %}
+        </h2>
+    {% endspaceless %}
+    <br />
     <div id="award-list" style="clear:both;margin-left:20px;line-height:25px;">
         {% for award in awards %}
         <p style="width:220px;float:left">{% user_signature award.user "badges" %}<span class="tag-number"> &#215; {{ award.count|intcomma }}</span></p>
@@ -34,5 +40,52 @@
     </div>
 
 </div>
+{% if requires_submitted_work %}
+    <br />
+    <a name="question"></a>
+    {% spaceless %}
+        <h2>
+            {% blocktrans count questions|length as counter %}
+                <span class="count">{{counter}}</span> Question
+            {% plural %}
+                <span class="count">{{counter}}</span> Questions
+            {% endblocktrans %}
+        </h2>
+    {% endspaceless %}
+    <div>{{ questions.paginator.sort_tabs }}</div>
+    <div id="listA" class="user-stats-table">
+        {% for question in questions.paginator.page %}
+            {% question_list_item question %}
+        {% endfor %}
+    </div>
+    <br clear="all"/>
+    <div class="pager">{{ questions.paginator.page_numbers }}</div>
+    <br clear="all"/>
+    <a name="answer"></a>
+    {% spaceless %}
+        <h2>
+            {% blocktrans count answers.count as counter %}
+            <span class="count">{{counter}}</span> Answer
+            {% plural %}
+            <span class="count">{{counter}}</span> Answers
+            {% endblocktrans %}
+        </h2>
+    {% endspaceless %}
+    <div>{{ answers.paginator.sort_tabs }}</div>
+    {% for answer in answers.paginator.page %}
+        <div class="answer-summary">
+            <a title="{{answer.headline}}" href="{{ answer.get_absolute_url }}">
+                <span class="answer-votes" title="{% blocktrans count answer.score as vote_count %}the answer has been voted {{ vote_count }} time{% plural %}the answer has been voted {{ vote_count }} times{% endblocktrans %}">
+                    {{ answer.score }}
+                </span>
+            </a>
+            <div class="answer-link"><a href="{{ answer.get_absolute_url }}">{{answer.headline}}</a>  ( {% user_signature answer.author "badges" %})
+            </div>
+        </div>
+    {% endfor %}
+    <br clear="all"/>
+    <div class="pager">{{ answers.paginator.page_numbers }}</div>
+    <br clear="all"/>
+{% endif %}
 {% endblock %}
 <!-- end template badge.html -->

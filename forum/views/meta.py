@@ -13,12 +13,14 @@ from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.db.models import Count
 from forum.forms import get_next_url
-from forum.models import Badge, Award, User, Page, CustomBadge
+from forum.models import Badge, Award, User, Page, CustomBadge, Question, Answer
 from forum.badges.base import BadgesMeta
 from forum import settings
 from forum.utils.mail import send_template_email
 from django.utils.safestring import mark_safe
 from forum.templatetags.extra_filters import or_preview
+from forum.views.readers import QuestionListPaginatorContext
+from forum.utils import pagination
 import decorators
 import re
 
@@ -100,6 +102,15 @@ def badges(request):
         'mybadges' : my_badges,
     }
 
+class BadgesAnswersPaginatorContext(pagination.PaginatorContext):
+    def __init__(self):
+        super (BadgesAnswersPaginatorContext, self).__init__('BADGE_ANSWER_LIST', sort_methods=(
+            (_('oldest'), pagination.SimpleSort(_('oldest answers'), 'added_at', _("oldest answers will be shown first"))),
+            (_('newest'), pagination.SimpleSort(_('newest answers'), '-added_at', _("newest answers will be shown first"))),
+            (_('votes'), pagination.SimpleSort(_('popular answers'), '-score', _("most voted answers will be shown first"))),
+            (_('author'), pagination.SimpleSort(_('by author'), 'author', _("sorted alphabetically by author"))),
+        ), default_sort=_('votes'), pagesizes=(5, 10, 20), default_pagesize=10, prefix=_('answers'))
+
 def badge(request, id, slug):
     badge = Badge.objects.get(id=id)
     awards = list(Award.objects.filter(badge=badge).order_by('user', 'awarded_at'))
@@ -108,11 +119,29 @@ def badge(request, id, slug):
     awards = sorted([dict(count=len(list(g)), user=k) for k, g in groupby(awards, lambda a: a.user)],
                     lambda c1, c2: c2['count'] - c1['count'])
 
-    return render_to_response('badge.html', {
-    'award_count': award_count,
-    'awards' : awards,
-    'badge' : badge,
-    }, context_instance=RequestContext(request))
+    kwargs = {
+        'award_count': award_count,
+        'awards' : awards,
+        'badge' : badge,
+        'requires_submitted_work': False,
+    }
+
+    try:
+        custom_badge = badge.custombadge_set.get()
+        if custom_badge.min_required_votes > 0:
+            kwargs['requires_submitted_work'] = True
+            kwargs['questions'] = Question.objects.filter_state(deleted=False).filter_tag(
+                custom_badge.tag_name).order_by('-added_at')
+            kwargs['answers'] = Answer.objects.filter_state(deleted=False).filter(
+                parent__id__in=[q.id for q in kwargs['questions']]).order_by('-score')
+            kwargs = pagination.paginated(request, (
+                ('questions', QuestionListPaginatorContext('USER_QUESTION_LIST', _('questions'), 3)),
+                ('answers', BadgesAnswersPaginatorContext())), kwargs)
+    except CustomBadge.DoesNotExist:
+        pass
+
+    return render_to_response('badge.html', kwargs,
+        context_instance=RequestContext(request))
 
 def page(request, path):
     if path in settings.STATIC_PAGE_REGISTRY:

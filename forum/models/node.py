@@ -137,6 +137,13 @@ class NodeQuerySet(CachedQuerySet):
     def children_count(self, child_type):
         return NodeMetaClass.types[child_type].objects.filter_state(deleted=False).filter(parent__in=self).count()
 
+    def filter_tag(self, tag):
+        query = models.Q(tagnames__contains = " " + tag + " ")
+        query |= models.Q(tagnames__startswith = tag + " ")
+        query |= models.Q(tagnames__endswith = " " + tag)
+        query |= models.Q(tagnames = tag)
+        return self.filter(query)
+
 
 class NodeManager(CachedManager):
     use_for_related_fields = True
