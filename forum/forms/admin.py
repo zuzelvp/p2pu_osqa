@@ -2,11 +2,11 @@ import socket
 from django import forms
 from django.utils.translation import ugettext as _
 from django.contrib.admin.widgets import FilteredSelectMultiple, AdminDateWidget
-from django.forms import ModelForm
+from django.core.exceptions import ObjectDoesNotExist
 from qanda import TitleField, EditorField
 from forum import settings
 from forum.models.node import NodeMetaClass
-from forum.models import User, CustomBadge
+from forum.models import User, CustomBadge, Badge
 
 class IPListField(forms.CharField):
     def clean(self, value):
@@ -105,7 +105,17 @@ class CreateUserForm(SimpleRegistrationForm, SetPasswordForm):
         self.fields['email'].label = _('email address')
 
 
-class CustomBadgeForm(ModelForm):
+class CustomBadgeForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(CustomBadgeForm, self).__init__(*args, **kwargs)
+        choices = Badge.type_choices[3:]
+        try:
+            initial = self.instance.ondb.type
+        except ObjectDoesNotExist:
+            initial = choices[0][0]
+        self.fields['type'] = forms.ChoiceField(choices=choices, initial=initial)
+
     class Meta:
         model = CustomBadge
 

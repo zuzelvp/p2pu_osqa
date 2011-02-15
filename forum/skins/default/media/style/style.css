@@ -1085,16 +1085,29 @@ ins {
     color: #333333;
 }
 
-.badge1 {
-    color: #FFCC00;
+.bronze, .badge1 {
+    color: #CC9933;
 }
 
 .silver, .badge2 {
     color: #CCCCCC;
 }
 
-.bronze, .badge3 {
-    color: #CC9933;
+.badge3 {
+    color: #FFCC00;
+}
+
+
+.badge4 {
+    color: #082567;
+}
+
+.badge5 {
+    color: #50c878;
+}
+
+.badge6 {
+    color: #e0115f;
 }
 
 .score {

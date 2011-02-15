@@ -87,20 +87,28 @@ def logout(request):
     'next' : get_next_url(request),
     }, context_instance=RequestContext(request))
 
+class BadgesPaginatorContext(pagination.PaginatorContext):
+    def __init__(self):
+        super (BadgesPaginatorContext, self).__init__('BADGE_LIST', sort_methods=(
+            (_('type'), pagination.SimpleSort(_('by type'), '-type', _("sorted by type of badge"))),
+            (_('name'), pagination.SimpleSort(_('by name'), 'cls', _("sorted alphabetically by name"))),
+            (_('award'), pagination.SimpleSort(_('by awards'), '-awarded_count', _("sorted by number of awards"))),
+        ), default_sort=_('type'), pagesizes=(5, 10, 20), default_pagesize=20, prefix=_('badge'))
+
 @decorators.render('badges.html', 'badges', _('badges'), weight=300)
 def badges(request):
     CustomBadge.load_custom_badges()
-    badges = [b.ondb for b in sorted(BadgesMeta.by_id.values(), lambda b1, b2: cmp(b1.name, b2.name))]
+    badges = Badge.objects.all()
 
     if request.user.is_authenticated():
         my_badges = Award.objects.filter(user=request.user).values('badge_id').distinct()
     else:
         my_badges = []
 
-    return {
+    return pagination.paginated(request, ('badges', BadgesPaginatorContext()), {
         'badges' : badges,
         'mybadges' : my_badges,
-    }
+    })
 
 class BadgesAnswersPaginatorContext(pagination.PaginatorContext):
     def __init__(self):

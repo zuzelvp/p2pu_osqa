@@ -567,6 +567,8 @@ def edit_custom_badge(request, id=None):
         form = CustomBadgeForm(request.POST, instance=badge)
         if form.is_valid():
             badge = form.save()
+            badge.ondb.type = form.cleaned_data['type']
+            badge.ondb.save()
             return HttpResponseRedirect(reverse('admin_custom_badges'))
     else:
         form = CustomBadgeForm(instance=badge)

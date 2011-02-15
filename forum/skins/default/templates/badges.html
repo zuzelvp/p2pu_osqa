@@ -5,17 +5,13 @@
 {% load i18n %}
 {% block title %}{% spaceless %}{% trans "Badges summary" %}{% endspaceless %}{% endblock %}
 {% block content %}
+<div>{{ badges.paginator.sort_tabs }}</div>
 <div class="headlineA">
         <span class="headMedals">{% trans "Badges" %}</span>
 </div>
 <div class="badges" id="main-body" style="width:100%">
-    <p>
-	{% trans "Community gives you awards for your questions, answers and votes." %}
-	{% blocktrans %}Below is the list of available badges and number of times each type of badge has been awarded.
-    {% endblocktrans %}
-    </p>
     <div id="medalList">
-        {% for badge in badges %}
+        {% for badge in badges.paginator.page %}
         <div style="clear:both;line-height:30px">
             <div style="float:left;min-width:30px;text-align:right;height:30px">
             {% for a in mybadges %}
@@ -34,34 +30,37 @@
         {% endfor %}
     </div>
 </div>
+<br clear="all"/>
+<div class="pager">{{ badges.paginator.page_numbers }}</div>
+<br clear="all"/>
 {% endblock %}
-{% block sidebar %}
 
+{% block sidebar %}
 <div class="boxC">
-    <h3>{% trans "Community badges" %}</h3>
+    <h3>{% trans "Badge Types" %}</h3>
+    <br />
     <div class="body">
+    <p>{% trans "Skill Badges:" %}</p>
     <p>
-        <a style="cursor:default;" title="{% trans "gold badge: the highest honor and is very rare" %}" class="medal"><span class="badge1">&#9679;</span>&nbsp;{% trans "gold" %}</a>
+        <a style="cursor:default;" class="medal"><span class="badge6">&#9679;</span>&nbsp;{% trans "ruby" %}</a>
     </p>
+    <p>{% trans "Value Badges:" %}</p>
     <p>
-	{% trans "gold badge description" %}
+        <a style="cursor:default;" class="medal"><span class="badge5">&#9679;</span>&nbsp;{% trans "emerald" %}</a>
     </p>
+    <p>{% trans "Community-Oriented Badges:" %}</p>
     <p>
-        <a style="cursor:default;" 
-			title="{% trans "silver badge: occasionally awarded for the very high quality contributions" %}" 
-			class="medal"><span class="badge2">&#9679;</span>&nbsp;{% trans "silver" %}</a>
+        <a style="cursor:default;" class="medal"><span class="badge4">&#9679;</span>&nbsp;{% trans "sapphire" %}</a>
     </p>
+    <p>{% trans "Participation Badges:" %}</p>
     <p>
-	{% trans "silver badge description" %}
-    </p>
-    <p>
-        <a style="cursor:default;" title="{% trans "bronze badge: often given as a special honor" %}" class="medal">
-		<span class="badge3">&#9679;</span>&nbsp;{% trans "bronze" %}</a>
-    </p>
-    <p>
-	{% trans "bronze badge description" %}
+        <a style="cursor:default;" class="medal"><span class="badge3">&#9679;</span>&nbsp;{% trans "gold" %}</a>
+        <a style="cursor:default;" class="medal"><span class="badge2">&#9679;</span>&nbsp;{% trans "silver" %}</a>
+        <a style="cursor:default;" class="medal"><span class="badge1">&#9679;</span>&nbsp;{% trans "bronze" %}</a>
     </p>
     </div>
 </div>
 {% endblock %}
+
+
 <!-- end template badges.html -->

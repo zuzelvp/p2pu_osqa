@@ -48,11 +48,15 @@ class BadgeManager(models.Manager):
         return BadgesQuerySet(self.model)
 
 class Badge(models.Model):
-    GOLD = 1
-    SILVER = 2
-    BRONZE = 3
+    BRONZE, SILVER, GOLD, SAPPHIRE, EMERALD, RUBY = range(1, 7)
+    type_choices = ((BRONZE, _('Bronze')),
+        (SILVER, _('Silver')),
+        (GOLD, _('Gold')),
+        (SAPPHIRE, _('Sapphire')),
+        (EMERALD, _('Emerald')),
+        (RUBY, _('Ruby')))
 
-    type        = models.SmallIntegerField()
+    type        = models.SmallIntegerField(choices=type_choices, default=BRONZE)
     cls         = models.CharField(max_length=50, null=True)
     awarded_count = models.PositiveIntegerField(default=0)
     
@@ -64,12 +68,22 @@ class Badge(models.Model):
     def name(self):
         CustomBadge.load_custom_badges()
         cls = self.__dict__.get('_class', None)
+        if not cls:
+            from forum.badges.base import BadgesMeta
+            cls = BadgesMeta.by_id.get(self.id, None)
+            if cls:
+                cls = cls()
         return cls and cls.name or _("Unknown")
 
     @property
     def description(self):
         CustomBadge.load_custom_badges()
         cls = self.__dict__.get('_class', None)
+        if not cls:
+            from forum.badges.base import BadgesMeta
+            cls = BadgesMeta.by_id.get(self.id, None)
+            if cls:
+                cls = cls()
         return cls and cls.description or _("No description available")
 
     @models.permalink
@@ -187,6 +201,9 @@ class CustomBadge(models.Model):
         from forum.actions import VoteUpAction, VoteDownAction
         self._hook(VoteUpAction)
         self._hook(VoteDownAction)
+
+    def __call__(self):
+        return self
 
     def _hook(self, action_cls):
         from forum.models import Action
