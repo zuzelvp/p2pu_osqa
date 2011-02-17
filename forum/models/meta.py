@@ -127,6 +127,9 @@ class CustomBadge(models.Model):
     tag = models.ForeignKey('Tag', editable=False)
     ondb = models.ForeignKey('Badge', editable=False)
 
+    is_peer_given = models.BooleanField(
+        help_text=_('If checked, the badge will not be awarded automatically, but it will be available for peers to issue to other peers.'))
+
     min_required_votes = models.PositiveIntegerField(help_text=_('Minimun number of votes required to be awarded.'),
         default=0)
 
@@ -228,6 +231,8 @@ class CustomBadge(models.Model):
                 try:
                     badge = CustomBadge.objects.get(tag__name=name)
                 except CustomBadge.DoesNotExist:
+                    continue
+                if badge.is_peer_given:
                     continue
                 if badge.min_required_votes < 1 or answer.score < badge.min_required_votes:
                     continue

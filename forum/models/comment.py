@@ -84,3 +84,10 @@ class VoteComment(models.Model):
         app_label = 'forum'
 
 
+class AwardComment(Node):
+    friendly_name = _("award comment")
+
+    class Meta(Node.Meta):
+        ordering = ('-added_at',)
+        proxy = True
+

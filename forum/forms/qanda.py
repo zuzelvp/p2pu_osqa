@@ -337,5 +337,55 @@ class SubscriptionSettingsForm(forms.ModelForm):
 class UserPreferencesForm(forms.Form):
     sticky_sorts = forms.BooleanField(required=False, initial=False)
 
+class UserNameField(forms.CharField):
+    def __init__(self, user, *args, **kwargs):
+        super(UserNameField, self).__init__(*args, **kwargs)
+        self.required = True
+        self.widget = forms.TextInput(attrs={'size' : 30, 'autocomplete' : 'off'})
+        self.max_length = 30
+        self.label  = _('User')
+        self.help_text = _('please enter the username')
+        self.initial = ''
+        self.request_user = user
+
+    def clean(self, value):
+        value = super(UserNameField, self).clean(value)
+        try:
+            user = User.objects.get(username=value)
+            if user == self.request_user:
+                raise forms.ValidationError(_('Sorry but you can not award a badge to yourself.'))
+            return user
+        except User.DoesNotExist:
+            raise forms.ValidationError(_('There is no user with username: %s.') % value)
+
+class AwardEditorField(EditorField):
+    def __init__(self, *args, **kwargs):
+        super(AwardEditorField, self).__init__(*args, **kwargs)
+        self.required = True
+
+    def clean(self, value):
+        if len(re.sub('[ ]{2,}', ' ', value)) < settings.FORM_MIN_COMMENT_BODY:
+            msg = _('At least %s characters required on comment body.') % settings.FORM_MIN_QUESTION_BODY
+            raise forms.ValidationError(msg)
+
+        return value
+
+class AwardBadgeForm(forms.Form):
+    text = AwardEditorField()
+
+    def __init__(self, data=None, user=None, *args, **kwargs):
+        super(AwardBadgeForm, self).__init__(data, *args, **kwargs)
+        self.fields['user'] = UserNameField(user)
+
+        if int(user.reputation) < settings.CAPTCHA_IF_REP_LESS_THAN and not (user.is_superuser or user.is_staff):
+            spam_fields = call_all_handlers('create_anti_spam_field')
+            if spam_fields:
+                spam_fields = dict(spam_fields)
+                for name, field in spam_fields.items():
+                    self.fields[name] = field
+
+                self._anti_spam_fields = spam_fields.keys()
+            else:
+                self._anti_spam_fields = []
 
 

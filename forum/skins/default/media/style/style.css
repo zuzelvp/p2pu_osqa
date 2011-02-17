@@ -750,11 +750,17 @@ ul.errorlist li {
     min-height: 80px;
 }
 
-.answer-body img {
+.award-comment-body {
+    font-size: 13px;
+    line-height: 20px;
+    min-height: 90px;
+}
+
+.answer-body img, .award-comment-body img {
     max-width: 640px;
 }
 
-.answered-by-owner {
+.answered-by-owner, .award-comment {
     background: none repeat scroll 0 0 #E9E9FF;
 }
 

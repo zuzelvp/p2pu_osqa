@@ -5,14 +5,55 @@
 {% load user_tags %}
 {% load humanize %}
 {% load question_list_tags %}
+{% load node_tags %}
 {% block title %}{% spaceless %}{{ badge.name }} - {% trans "Badge" %}{% endspaceless %}{% endblock %}
 {% block forejs %}
-       <script type="text/javascript">
+    {% if peer_given and request.user.is_authenticated %}
+        <script type='text/javascript' src='{% media  "/media/js/wmd/showdown.js" %}'></script>
+        <script type='text/javascript' src='{% media  "/media/js/wmd/wmd.js" %}'></script>
+        <link rel="stylesheet" type="text/css" href="{% media  "/media/js/wmd/wmd.css" %}" />
+    {% endif %}
+    <script type="text/javascript">
         $().ready(function(){
             $("#nav_badges").attr('className',"on");
         });
-         
-        </script>
+
+        {% if peer_given and request.user.is_authenticated %}
+            $(function() {
+                $('#id_user').autocomplete('{% url matching_usernames %}', {
+                    minChars: 1,
+                    matchContains: true,
+                    max: 10,
+                });
+                var display = true;
+                var txt = "[{% trans "hide preview" %}]";
+                $('#pre-collapse').text(txt);
+                $('#pre-collapse').bind('click', function(){
+                    txt = display ? "[{% trans "show preview" %}]" : "[{% trans "hide preview" %}]";
+                    display = !display;
+                    $('#previewer').toggle();
+                    $('#pre-collapse').text(txt);
+                });
+            });
+
+            function submitClicked(e, f) {
+                if(!(browserTester('chrome') || browserTester('safari'))) {
+                    $("input.submit")[0].disabled=true;
+                }
+                window.removeEventListener('beforeunload', beforeUnload, true);
+                if (f) {
+                    f.submit();
+                }
+            }
+
+            function beforeUnload(e) {
+                if($("input#id_user")[0].value != "" || $("textarea#editor")[0].value != "") {
+                    return yourWorkWillBeLost(e);
+                }
+            }
+            window.addEventListener('beforeunload', beforeUnload, true);
+        {% endif %}
+    </script>
 {% endblock %}
 {% block content %}
 <div id="main-bar" class="headNormal">
@@ -85,6 +126,93 @@
     {% endfor %}
     <br clear="all"/>
     <div class="pager">{{ answers.paginator.page_numbers }}</div>
+    <br clear="all"/>
+{% endif %}
+
+{% if peer_given %}
+    <br />
+    {% if request.user.is_authenticated %}
+        <form id="fmaward" action="" method="post">
+           <div style="padding:10px 0 0 0;">
+                <div class="headNormal">
+                    {% trans "Give this Badge to a Peer" %}
+                </div>
+            </div>
+
+            <div class="form-item">
+                <label for="id_user" ><strong>{{ award_form.user.label_tag }}:</strong></label>
+                    {{ award_form.user }} {{ award_form.user.errors }}
+            </div>
+
+            <div id="description" class="" >
+                <div id="wmd-button-bar" class="wmd-panel"></div>
+                {{ award_form.text }}
+                <div class="preview-toggle">
+                    <table width="100%">
+                        <tr>
+                            <td>
+                                <span id="pre-collapse" title="{% trans "Toggle the real time Markdown editor preview" %}">
+                                    {% trans "toggle preview" %}
+                                </span>
+                            </td>
+                            <td style="text-align: right;" id="editor-metrics"></td>
+                        </tr>
+                    </table>
+                </div>
+                {{ award_form.text.errors }}
+                <div id="previewer" class="wmd-preview"></div>
+            </div>
+
+            {% if award_form.recaptcha %}
+                <div class="award-captcha" style="float: left;">
+                    {{ award_form.recaptcha.errors }}
+                    {{ award_form.recaptcha }}
+                </div>
+                <div class="clear"></div>
+            {% endif %}
+            <br />
+            <input name="award" type="button" value="{% trans "Give Badge" %}" class="submit" onclick="submitClicked(event, this.form)"/>
+        </form>
+        <br /><br />
+    {% endif %}
+    {% spaceless %}
+        <h2>
+            {% blocktrans count award_comments|length as counter %}
+                <span class="count">{{counter}}</span> Award Comment
+            {% plural %}
+                <span class="count">{{counter}}</span> Award Comments
+            {% endblocktrans %}
+        </h2>
+    {% endspaceless %}
+    <div>{{ award_comments.paginator.sort_tabs }}</div>
+    <br /> <br />
+    {% for award_comment in award_comments.paginator.page %}
+        <a name="{{ award_comment.node.id }}"></a>
+        <div class="award-comment">
+            <table style="width:100%;">
+                <tr>
+                    <td style="width:10px;vertical-align:top">
+                        <div class="vote-buttons">
+                        </div>
+                    </td>
+                    <td>
+                        <div class="item-right">
+                            <div class="award-comment-body">
+                                <p><strong>{% trans "Awarded to" %} {% user_signature award_comment.user "badges" %}:</strong></p>
+                                {{ award_comment.node.html|safe }}
+                                <div class="post-update-info-container">
+                                    {% contributors_info award_comment.node %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br clear="all"/>
+    {% endfor %}
+    <br clear="all"/>
+    <div class="pager">{{ award_comments.paginator.page_numbers }}</div>
     <br clear="all"/>
 {% endif %}
 {% endblock %}

@@ -12,9 +12,9 @@ from forum.forms import FeedbackForm
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.db.models import Count
-from forum.forms import get_next_url
-from forum.models import Badge, Award, User, Page, CustomBadge, Question, Answer
-from forum.badges.base import BadgesMeta
+from forum.forms import get_next_url, AwardBadgeForm
+from forum.models import Badge, Award, User, Page, CustomBadge, Question, Answer, AwardComment
+from forum.badges.base import BadgesMeta, award_badge
 from forum import settings
 from forum.utils.mail import send_template_email
 from django.utils.safestring import mark_safe
@@ -119,9 +119,19 @@ class BadgesAnswersPaginatorContext(pagination.PaginatorContext):
             (_('author'), pagination.SimpleSort(_('by author'), 'author', _("sorted alphabetically by author"))),
         ), default_sort=_('votes'), pagesizes=(5, 10, 20), default_pagesize=10, prefix=_('answers'))
 
+class BadgesAwardCommentsPaginatorContext(pagination.PaginatorContext):
+    def __init__(self):
+        super (BadgesAwardCommentsPaginatorContext, self).__init__('BADGE_ANSWER_LIST', sort_methods=(
+            (_('oldest'), pagination.SimpleSort(_('oldest answers'), 'awarded_at', _("oldest answers will be shown first"))),
+            (_('newest'), pagination.SimpleSort(_('newest answers'), '-awarded_at', _("newest answers will be shown first"))),
+            (_('receiver'), pagination.SimpleSort(_('by receiver'), 'user', _("sorted alphabetically by the peer who received the badge"))),
+            (_('giver'), pagination.SimpleSort(_('by giver'), 'node__author', _("sorted alphabetically by the peer who gave the badge"))),
+        ), default_sort=_('newest'), pagesizes=(5, 10, 20), default_pagesize=10, prefix=_('award_comments'))
+
 def badge(request, id, slug):
     badge = Badge.objects.get(id=id)
-    awards = list(Award.objects.filter(badge=badge).order_by('user', 'awarded_at'))
+    award_queryset = Award.objects.filter(badge=badge)
+    awards = list(award_queryset.order_by('user', 'awarded_at'))
     award_count = len(awards)
 
     awards = sorted([dict(count=len(list(g)), user=k) for k, g in groupby(awards, lambda a: a.user)],
@@ -132,11 +142,28 @@ def badge(request, id, slug):
         'awards' : awards,
         'badge' : badge,
         'requires_submitted_work': False,
+        'peer_given': False,
     }
 
     try:
         custom_badge = badge.custombadge_set.get()
-        if custom_badge.min_required_votes > 0:
+        if custom_badge.is_peer_given:
+            if request.POST:
+                kwargs['award_form'] = AwardBadgeForm(request.POST, user=request.user)
+            else:
+                kwargs['award_form'] = AwardBadgeForm(user=request.user)
+            if request.method == "POST" and kwargs['award_form'].is_valid():
+                award_comment = AwardComment(author=request.user, body=kwargs['award_form'].cleaned_data['text'])
+                award_comment.save()
+                class DummyAction:
+                    node = award_comment
+                award_badge(badge, kwargs['award_form'].cleaned_data['user'], DummyAction(), False)
+                return HttpResponseRedirect(badge.get_absolute_url() + "#%s" % award_comment.id)
+            kwargs['peer_given'] = True
+            kwargs['award_comments'] = award_queryset
+            kwargs = pagination.paginated(request,
+                ('award_comments', BadgesAwardCommentsPaginatorContext()), kwargs)
+        elif custom_badge.min_required_votes > 0:
             kwargs['requires_submitted_work'] = True
             kwargs['questions'] = Question.objects.filter_state(deleted=False).filter_tag(
                 custom_badge.tag_name).order_by('-added_at')

@@ -628,6 +628,18 @@ def matching_users(request):
 
     return HttpResponse(output, mimetype="text/plain")
 
+def matching_usernames(request):
+    if len(request.GET['q']) == 0:
+        raise CommandException(_("Invalid request"))
+
+    possible_users = User.objects.filter(username__icontains = request.GET['q'])
+    output = ''
+
+    for user in possible_users:
+        output += ("%s\n" % user.username)
+
+    return HttpResponse(output, mimetype="text/plain")
+
 def related_questions(request):
     if request.POST and request.POST.get('title', None):
         can_rank, questions = Question.objects.search(request.POST['title'])
