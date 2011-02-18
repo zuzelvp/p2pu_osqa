@@ -10,6 +10,11 @@
         <span class="headMedals">{% trans "Badges" %}</span>
 </div>
 <div class="badges" id="main-body" style="width:100%">
+    <p>
+        {% blocktrans %}
+            Please note, the Skill (Ruby), Value (Emerald) and Community-Oriented (Sapphire) badges that you have earned will be ported to your P2PU/School of Webcraft profile at the end of this P2PU session. The OSQA badges will not be ported.
+        {% endblocktrans %}
+    </p>
     <div id="medalList">
         {% for badge in badges.paginator.page %}
         <div style="clear:both;line-height:30px">
@@ -52,7 +57,7 @@
     <p>
         <a style="cursor:default;" class="medal"><span class="badge4">&#9679;</span>&nbsp;{% trans "sapphire" %}</a>
     </p>
-    <p>{% trans "Participation Badges:" %}</p>
+    <p>{% trans "OSQA Badges:" %}</p>
     <p>
         <a style="cursor:default;" class="medal"><span class="badge3">&#9679;</span>&nbsp;{% trans "gold" %}</a>
         <a style="cursor:default;" class="medal"><span class="badge2">&#9679;</span>&nbsp;{% trans "silver" %}</a>
