@@ -123,7 +123,8 @@ class CustomBadge(models.Model):
     name_help = _('Badge names can only include letters and spaces. Please, do not include the word badge at the end of the name.')
     name_validator = RegexValidator(r'^[a-zA-z][a-zA-Z ]*$', name_help)
     name = models.CharField(max_length=100, unique=True, validators=[name_validator], help_text=name_help)
-    description = models.TextField(help_text=_('Short description of the badge.'))
+    description = models.CharField(max_length=100, help_text=_('Short description of the badge.'))
+    long_description = models.TextField(help_text=_('Long description of the badge. You can include markdown syntax if necessary.'), null=True, blank=True)
     tag = models.ForeignKey('Tag', editable=False)
     ondb = models.ForeignKey('Badge', editable=False)
 

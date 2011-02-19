@@ -6,6 +6,7 @@
 {% load humanize %}
 {% load question_list_tags %}
 {% load node_tags %}
+{% load markup %}
 {% block title %}{% spaceless %}{{ badge.name }} - {% trans "Badge" %}{% endspaceless %}{% endblock %}
 {% block forejs %}
     {% if peer_given and request.user.is_authenticated %}
@@ -63,6 +64,10 @@
     <p>
         <a href="{{badge.get_absolute_url}}" title="{{ badge.get_type_display }} : {{ badge.description }}" class="medal"><span class="badge{{ badge.type }}">&#9679;</span>&nbsp;{{ badge.name }}</a> {{ badge.description }}
     </p>
+    {% if long_description %}
+        {{ long_description|markdown:"settingsparser" }}
+        <br />
+    {% endif %}
     <a name="users"></a>
     {% spaceless %}
         <h2>

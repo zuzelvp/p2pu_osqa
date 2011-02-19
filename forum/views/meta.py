@@ -147,6 +147,7 @@ def badge(request, id, slug):
 
     try:
         custom_badge = badge.custombadge_set.get()
+        kwargs['long_description'] = custom_badge.long_description
         if custom_badge.is_peer_given:
             if request.POST:
                 kwargs['award_form'] = AwardBadgeForm(request.POST, user=request.user)
