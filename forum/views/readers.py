@@ -37,6 +37,23 @@ class HottestQuestionsSort(pagination.SortBase):
         return questions.annotate(new_child_count=Count('all_children')).filter(
                 all_children__added_at__gt=datetime.datetime.now() - datetime.timedelta(days=1)).order_by('-new_child_count')
 
+class BadgeQuestionsFilter(pagination.SortBase):
+    def apply(self, questions):
+        query = None
+        for custom_badge in CustomBadge.objects.filter(is_peer_given=False):
+            tag = custom_badge.tag_name
+            if query:
+                query |= Q(tagnames__contains = " " + tag + " ")
+            else:
+                query = Q(tagnames__contains = " " + tag + " ")
+            query |= Q(tagnames__startswith = tag + " ")
+            query |= Q(tagnames__endswith = " " + tag)
+            query |= Q(tagnames = tag)
+        if query:
+            return questions.filter(query).order_by('tagnames')
+        else:
+            return questions
+
 
 class QuestionListPaginatorContext(pagination.PaginatorContext):
     def __init__(self, id='QUESTIONS_LIST', prefix='', default_pagesize=30):
@@ -45,6 +62,7 @@ class QuestionListPaginatorContext(pagination.PaginatorContext):
             (_('newest'), pagination.SimpleSort(_('newest'), '-added_at', _("most <strong>recently asked</strong> questions"))),
             (_('hottest'), HottestQuestionsSort(_('hottest'), _("most <strong>active</strong> questions in the last 24 hours</strong>"))),
             (_('mostvoted'), pagination.SimpleSort(_('most voted'), '-score', _("most <strong>voted</strong> questions"))),
+            (_('challenges'), BadgeQuestionsFilter(_('challenges'), _("only show badge challenges"))),
         ), pagesizes=(15, 30, 50), default_pagesize=default_pagesize, prefix=prefix)
 
 class AnswerSort(pagination.SimpleSort):
