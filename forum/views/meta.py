@@ -12,7 +12,7 @@ from forum.forms import FeedbackForm
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django.db.models import Count
-from forum.forms import get_next_url, AwardBadgeForm
+from forum.forms import get_next_url, AwardBadgeForm, BadgeFilterForm
 from forum.models import Badge, Award, User, Page, CustomBadge, Question, Answer, AwardComment
 from forum.badges.base import BadgesMeta, award_badge
 from forum import settings
@@ -162,6 +162,14 @@ def badge(request, id, slug):
                 return HttpResponseRedirect(badge.get_absolute_url() + "#%s" % award_comment.id)
             kwargs['peer_given'] = True
             kwargs['award_comments'] = award_queryset
+            if request.method == 'GET' and 'user_filter' in request.GET and request.GET['user_filter']:
+                filter_form = BadgeFilterForm(request.GET)
+                if filter_form.is_valid():
+                    kwargs['user_filter'] = filter_form.cleaned_data['user_filter']
+                    kwargs['award_comments'] = award_queryset.filter(user=kwargs['user_filter'])
+            else:
+                filter_form = BadgeFilterForm()
+            kwargs['filter_form'] = filter_form
             kwargs = pagination.paginated(request,
                 ('award_comments', BadgesAwardCommentsPaginatorContext()), kwargs)
         elif custom_badge.min_required_votes > 0:
@@ -170,6 +178,14 @@ def badge(request, id, slug):
                 custom_badge.tag_name).order_by('-added_at')
             kwargs['answers'] = Answer.objects.filter_state(deleted=False).filter(
                 parent__id__in=[q.id for q in kwargs['questions']]).order_by('-score')
+            if request.method == 'GET' and 'user_filter' in request.GET and request.GET['user_filter']:
+                filter_form = BadgeFilterForm(request.GET)
+                if filter_form.is_valid():
+                    kwargs['user_filter'] = filter_form.cleaned_data['user_filter']
+                    kwargs['answers'] = kwargs['answers'].filter(author=kwargs['user_filter'])
+            else:
+                filter_form = BadgeFilterForm()
+            kwargs['filter_form'] = filter_form
             kwargs = pagination.paginated(request, (
                 ('questions', QuestionListPaginatorContext('USER_QUESTION_LIST', _('questions'), 3)),
                 ('answers', BadgesAnswersPaginatorContext())), kwargs)

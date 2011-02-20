@@ -19,22 +19,24 @@
             $("#nav_badges").attr('className',"on");
         });
 
-        {% if peer_given and request.user.is_authenticated %}
+        {% if peer_given or requires_submitted_work %}
             $(function() {
-                $('#id_user').autocomplete('{% url matching_usernames %}', {
+                $('#id_user, #id_user_filter').autocomplete('{% url matching_usernames %}', {
                     minChars: 1,
                     matchContains: true,
                     max: 10,
                 });
-                var display = true;
-                var txt = "[{% trans "hide preview" %}]";
-                $('#pre-collapse').text(txt);
-                $('#pre-collapse').bind('click', function(){
-                    txt = display ? "[{% trans "show preview" %}]" : "[{% trans "hide preview" %}]";
-                    display = !display;
-                    $('#previewer').toggle();
+                {% if peer_given and request.user.is_authenticated %}
+                    var display = true;
+                    var txt = "[{% trans "hide preview" %}]";
                     $('#pre-collapse').text(txt);
-                });
+                    $('#pre-collapse').bind('click', function(){
+                        txt = display ? "[{% trans "show preview" %}]" : "[{% trans "hide preview" %}]";
+                        display = !display;
+                        $('#previewer').toggle();
+                        $('#pre-collapse').text(txt);
+                    });
+                {% endif %}
             });
 
             function submitClicked(e, f) {
@@ -52,10 +54,13 @@
                     return yourWorkWillBeLost(e);
                 }
             }
-            window.addEventListener('beforeunload', beforeUnload, true);
+            {% if peer_given and user.is_authenticated %}
+                window.addEventListener('beforeunload', beforeUnload, true);
+            {% endif %}
         {% endif %}
     </script>
 {% endblock %}
+
 {% block content %}
 <div id="main-bar" class="headNormal">
 	{% trans "Badge" %}
@@ -84,8 +89,8 @@
         <p style="width:220px;float:left">{% user_signature award.user "badges" %}<span class="tag-number"> &#215; {{ award.count|intcomma }}</span></p>
         {% endfor %}
     </div>
-
 </div>
+
 {% if requires_submitted_work %}
     <br />
     <a name="question"></a>
@@ -107,7 +112,7 @@
     <br clear="all"/>
     <div class="pager">{{ questions.paginator.page_numbers }}</div>
     <br clear="all"/>
-    <a name="answer"></a>
+    <a name="badge_data"></a>
     {% spaceless %}
         <h2>
             {% blocktrans count answers.count as counter %}
@@ -117,21 +122,6 @@
             {% endblocktrans %}
         </h2>
     {% endspaceless %}
-    <div>{{ answers.paginator.sort_tabs }}</div>
-    {% for answer in answers.paginator.page %}
-        <div class="answer-summary">
-            <a title="{{answer.headline}}" href="{{ answer.get_absolute_url }}">
-                <span class="answer-votes" title="{% blocktrans count answer.score as vote_count %}the answer has been voted {{ vote_count }} time{% plural %}the answer has been voted {{ vote_count }} times{% endblocktrans %}">
-                    {{ answer.score }}
-                </span>
-            </a>
-            <div class="answer-link"><a href="{{ answer.get_absolute_url }}">{{answer.headline}}</a>  ( {% user_signature answer.author "badges" %})
-            </div>
-        </div>
-    {% endfor %}
-    <br clear="all"/>
-    <div class="pager">{{ answers.paginator.page_numbers }}</div>
-    <br clear="all"/>
 {% endif %}
 
 {% if peer_given %}
@@ -180,6 +170,7 @@
         </form>
         <br /><br />
     {% endif %}
+    <a name="badge_data"></a>
     {% spaceless %}
         <h2>
             {% blocktrans count award_comments|length as counter %}
@@ -189,6 +180,41 @@
             {% endblocktrans %}
         </h2>
     {% endspaceless %}
+{% endif %}
+
+{% if requires_submitted_work or peer_given %}
+    <form id="bfilter" action="" method="get">
+        
+        <label for="id_user_filter" ><strong>{{ filter_form.user_filter.label_tag }}:</strong></label>
+        {{ filter_form.user_filter }}
+        <input name="filter" type="button" value="{% trans "Filter" %}" class="submit" onclick="submitClicked(event, this.form)"/>
+        {{ filter_form.user_filter.errors }}
+    </form>
+    {% if user_filter %}
+        <br />
+        <h3>{% blocktrans %} Filtered by user: {{ user_filter }}. {% endblocktrans %}</h3>
+    {% endif %}
+{% endif %}
+
+{% if requires_submitted_work %}
+    <div>{{ answers.paginator.sort_tabs }}</div>
+    {% for answer in answers.paginator.page %}
+        <div class="answer-summary">
+            <a title="{{answer.headline}}" href="{{ answer.get_absolute_url }}">
+                <span class="answer-votes" title="{% blocktrans count answer.score as vote_count %}the answer has been voted {{ vote_count }} time{% plural %}the answer has been voted {{ vote_count }} times{% endblocktrans %}">
+                    {{ answer.score }}
+                </span>
+            </a>
+            <div class="answer-link"><a href="{{ answer.get_absolute_url }}">{{answer.headline}}</a>  ( {% user_signature answer.author "badges" %})
+            </div>
+        </div>
+    {% endfor %}
+    <br clear="all"/>
+    <div class="pager">{{ answers.paginator.page_numbers }}</div>
+    <br clear="all"/>
+{% endif %}
+
+{% if peer_given %}
     <div>{{ award_comments.paginator.sort_tabs }}</div>
     <br /> <br />
     {% for award_comment in award_comments.paginator.page %}
@@ -220,5 +246,6 @@
     <div class="pager">{{ award_comments.paginator.page_numbers }}</div>
     <br clear="all"/>
 {% endif %}
+
 {% endblock %}
 <!-- end template badge.html -->

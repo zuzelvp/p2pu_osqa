@@ -338,9 +338,9 @@ class UserPreferencesForm(forms.Form):
     sticky_sorts = forms.BooleanField(required=False, initial=False)
 
 class UserNameField(forms.CharField):
-    def __init__(self, user, *args, **kwargs):
-        super(UserNameField, self).__init__(*args, **kwargs)
+    def __init__(self, user=None, *args, **kwargs):
         self.required = True
+        super(UserNameField, self).__init__(*args, **kwargs)
         self.widget = forms.TextInput(attrs={'size' : 30, 'autocomplete' : 'off'})
         self.max_length = 30
         self.label  = _('User')
@@ -350,13 +350,14 @@ class UserNameField(forms.CharField):
 
     def clean(self, value):
         value = super(UserNameField, self).clean(value)
-        try:
-            user = User.objects.get(username=value)
-            if user == self.request_user:
-                raise forms.ValidationError(_('Sorry but you can not award a badge to yourself.'))
-            return user
-        except User.DoesNotExist:
-            raise forms.ValidationError(_('There is no user with username: %s.') % value)
+        if value:
+            try:
+                user = User.objects.get(username=value)
+                if self.request_user and user == self.request_user:
+                    raise forms.ValidationError(_('Sorry but you can not award a badge to yourself.'))
+                return user
+            except User.DoesNotExist:
+                raise forms.ValidationError(_('There is no user with username: %s.') % value)
 
 class AwardEditorField(EditorField):
     def __init__(self, *args, **kwargs):
@@ -387,5 +388,12 @@ class AwardBadgeForm(forms.Form):
                 self._anti_spam_fields = spam_fields.keys()
             else:
                 self._anti_spam_fields = []
+
+
+class BadgeFilterForm(forms.Form):
+
+    def __init__(self, data=None, *args, **kwargs):
+        super(BadgeFilterForm, self).__init__(data, *args, **kwargs)
+        self.fields['user_filter'] = UserNameField(required=False)
 
 
