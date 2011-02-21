@@ -144,7 +144,16 @@ def process_provider_signin(request, provider):
         except:
             request.session['assoc_key'] = assoc_key
             request.session['auth_provider'] = provider
-            return HttpResponseRedirect(reverse('auth_external_register'))
+            from forum.authentication.drupal_auth_backend import DrupalAuthBackend
+            open_id_user = DrupalAuthBackend.get_openid_user(assoc_key)
+            if open_id_user:
+                uassoc = AuthKeyUserAssociation(user=open_id_user, key=assoc_key, provider=provider)
+                uassoc.save()
+                return login_and_forward(request, open_id_user)
+            else:
+                # Cann't allow users to authenticate with openid credentials not used at p2pu.org.
+                request.session['auth_error'] = _("Sorry, these openid login credentials were not found at p2pu.org. (%s)" % assoc_key)
+                # return HttpResponseRedirect(reverse('auth_external_register'))
 
     return HttpResponseRedirect(reverse('auth_signin'))
 

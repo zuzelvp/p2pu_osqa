@@ -35,7 +35,7 @@ class DrupalAuthBackend:
         user = User(username=username)
         pwd_valid = self.check_password(drupal_user, user, password)
         if pwd_valid:
-            self.get_user_data(drupal_user, user)
+            DrupalAuthBackend.get_user_data(drupal_user, user)
             user.save()
             return user
         else:
@@ -50,7 +50,8 @@ class DrupalAuthBackend:
             user.set_password(password)
         return is_correct
 
-    def get_user_data(self, drupal_user, user):
+    @classmethod
+    def get_user_data(cls, drupal_user, user):
         user.email = drupal_user.mail
         drupal_realname = drupal.Realname.objects.using(DRUPAL_DB).get(uid=drupal_user.uid)
         user.real_name = drupal_realname.realname
@@ -59,6 +60,21 @@ class DrupalAuthBackend:
         try:
             return User.objects.get(pk=user_id)
         except User.DoesNotExist:
+            return None
+
+    @classmethod
+    def get_openid_user(cls, assoc_key):
+        try:
+            authmap = drupal.Authmap.objects.using(DRUPAL_DB).get(authname=assoc_key)
+            drupal_user = drupal.Users.objects.using(DRUPAL_DB).get(uid=authmap.uid)
+            try:
+                user = User.objects.get(username=drupal_user.name)
+            except User.DoesNotExist:
+                user = User(username=drupal_user.name)
+                cls.get_user_data(drupal_user, user)
+                user.save()
+            return user
+        except drupal.Authmap.DoesNotExist, drupal.Users.DoesNotExist:
             return None
 
 
