@@ -149,10 +149,11 @@ def badge(request, id, slug):
         custom_badge = badge.custombadge_set.get()
         kwargs['long_description'] = custom_badge.long_description
         if custom_badge.is_peer_given:
+            kwargs['is_peer_award_restricted'] = custom_badge.is_peer_award_restricted(request.user)
             if request.POST:
-                kwargs['award_form'] = AwardBadgeForm(request.POST, user=request.user)
+                kwargs['award_form'] = AwardBadgeForm(request.POST, user=request.user, custom_badge=custom_badge)
             else:
-                kwargs['award_form'] = AwardBadgeForm(user=request.user)
+                kwargs['award_form'] = AwardBadgeForm(user=request.user, custom_badge=custom_badge)
             if request.method == "POST" and kwargs['award_form'].is_valid():
                 award_comment = AwardComment(author=request.user, body=kwargs['award_form'].cleaned_data['text'])
                 award_comment.save()

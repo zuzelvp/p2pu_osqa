@@ -338,7 +338,7 @@ class UserPreferencesForm(forms.Form):
     sticky_sorts = forms.BooleanField(required=False, initial=False)
 
 class UserNameField(forms.CharField):
-    def __init__(self, user=None, *args, **kwargs):
+    def __init__(self, user=None, custom_badge=None, *args, **kwargs):
         self.required = True
         super(UserNameField, self).__init__(*args, **kwargs)
         self.widget = forms.TextInput(attrs={'size' : 30, 'autocomplete' : 'off'})
@@ -347,14 +347,20 @@ class UserNameField(forms.CharField):
         self.help_text = _('please enter the username')
         self.initial = ''
         self.request_user = user
+        self.custom_badge = custom_badge
 
     def clean(self, value):
         value = super(UserNameField, self).clean(value)
         if value:
             try:
                 user = User.objects.get(username=value)
-                if self.request_user and user == self.request_user:
-                    raise forms.ValidationError(_('Sorry but you can not award a badge to yourself.'))
+                if self.request_user and self.custom_badge:
+                    if not self.request_user.is_authenticated():
+                        raise forms.ValidationError(_('Only authenticated users can give badges to peers.'))
+                    if user == self.request_user:
+                        raise forms.ValidationError(_('Sorry but you can not award badges to yourself.'))
+                    if self.custom_badge.is_peer_award_restricted(self.request_user):
+                        raise forms.ValidationError(_('Sorry but you are not allowed to give this badge to peers.'))
                 return user
             except User.DoesNotExist:
                 raise forms.ValidationError(_('There is no user with username: %s.') % value)
@@ -374,9 +380,9 @@ class AwardEditorField(EditorField):
 class AwardBadgeForm(forms.Form):
     text = AwardEditorField()
 
-    def __init__(self, data=None, user=None, *args, **kwargs):
+    def __init__(self, data=None, user=None, custom_badge=None, *args, **kwargs):
         super(AwardBadgeForm, self).__init__(data, *args, **kwargs)
-        self.fields['user'] = UserNameField(user)
+        self.fields['user'] = UserNameField(user, custom_badge)
 
         if int(user.reputation) < settings.CAPTCHA_IF_REP_LESS_THAN and not (user.is_superuser or user.is_staff):
             spam_fields = call_all_handlers('create_anti_spam_field')

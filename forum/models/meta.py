@@ -135,10 +135,10 @@ class CustomBadge(models.Model):
         default=0)
 
     response_prerequisites = models.ManyToManyField('CustomBadge', symmetrical=False, related_name='next_level_badges',
-        help_text=_("Badges required before a user is allowed to submit a response."), null=True, blank=True)
+        help_text=_("Badges required before a user is allowed to submit a response/answer."), null=True, blank=True)
 
     owners = models.ManyToManyField(User, related_name='badges_managed', null=True, blank=True,
-        help_text=_("Badge owners have the same voting priviledges as any user with the badge."))
+        help_text=_("Badge owners are always allowed to review/vote submitted answers, or give the badge to peers."))
 
     voting_restricted = models.BooleanField(help_text="If checked, only users with the badge (or the badge owners) will be allowed to vote.", default=False)
 
@@ -248,8 +248,15 @@ class CustomBadge(models.Model):
             except CustomBadge.DoesNotExist:
                 continue
             for prerequisite in badge.response_prerequisites.all():
-                if not user.is_authenticated or not user.badges.filter(cls=prerequisite.ondb.cls):
+                if not user.is_authenticated() or not user.badges.filter(cls=prerequisite.ondb.cls):
                     return True
+        return False
+
+    def is_peer_award_restricted(self, user):
+        if not user.is_authenticated():
+            return True
+        if self.owners.count() and not self.owners.filter(pk=user.pk).count():
+            return True
         return False
 
     @classmethod

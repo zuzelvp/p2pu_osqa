@@ -126,7 +126,7 @@
 
 {% if peer_given %}
     <br />
-    {% if request.user.is_authenticated %}
+    {% if not is_peer_award_restricted %}
         <form id="fmaward" action="" method="post">
            <div style="padding:10px 0 0 0;">
                 <div class="headNormal">
