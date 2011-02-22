@@ -36,6 +36,9 @@ class DrupalAuthBackend:
         pwd_valid = self.check_password(drupal_user, user, password)
         if pwd_valid:
             DrupalAuthBackend.get_user_data(drupal_user, user)
+            if User.objects.all().count() == 0:
+                user.is_superuser = True
+                user.is_staff = True
             user.save()
             return user
         else:

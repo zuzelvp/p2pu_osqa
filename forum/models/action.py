@@ -304,7 +304,7 @@ class ActionRepute(models.Model):
         if self.user.reputation + value < 0:
             return 0
         else:
-            return models.F('reputation') + value
+            return self.user.reputation + value
 
     def save(self, *args, **kwargs):
         super(ActionRepute, self).save(*args, **kwargs)

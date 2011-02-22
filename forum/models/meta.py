@@ -227,6 +227,8 @@ class CustomBadge(models.Model):
         if action.node.node_type == 'answer':
             answer = action.node
             question = answer.parent
+            if not question.author.is_superuser:
+                return
             user = action.node.author
             for name in question.tagname_list():
                 try:

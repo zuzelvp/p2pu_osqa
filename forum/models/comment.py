@@ -17,12 +17,14 @@ class Comment(Node):
 
     @property
     def comment(self):
-        if not self.body[3:].startswith(self.prefix()):
-            self.body = self.body[:3] + self.prefix() + self.body[3:]
+        prev_body = self.body
+        self.body = prev_body[:3] + self.prefix() + prev_body[3:]
         if settings.FORM_ALLOW_MARKDOWN_IN_COMMENTS:
-            return self.as_markdown('limitedsyntax')
+            result = self.as_markdown('limitedsyntax')
         else:
-            return self.body
+            result = self.body
+        self.body = prev_body
+        return result
 
     @property
     def headline(self):
